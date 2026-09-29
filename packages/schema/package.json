@@ -1,0 +1,29 @@
+{
+  "name": "@astro/schema",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/enums.ts",
+    "./enums": "./src/enums.ts",
+    "./chart": "./src/chart.ts",
+    "./analysis": "./src/analysis.ts",
+    "./local": "./src/local.ts",
+    "./payload": "./src/payload.ts",
+    "./api": "./src/api.ts",
+    "./file": "./src/file.ts",
+    "./identifying": "./src/identifying.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.2"
+  }
+}

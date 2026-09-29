@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.wrangler/
+.svelte-kit/
+coverage/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+.dev.vars
