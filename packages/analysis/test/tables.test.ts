@@ -7,8 +7,6 @@ import {
 } from "../src/index.ts";
 import { at, systemChart } from "./helpers.ts";
 
-const signs = (planet: Record<string, number>): Record<string, number> => planet;
-
 describe("nakshatra and pada", () => {
   it.each([
     [0, "Ashwini", 1, "Ketu"],
@@ -24,7 +22,7 @@ describe("nakshatra and pada", () => {
 });
 
 describe("relations", () => {
-  const s = signs({ Sun: 0, Moon: 1, Saturn: 6 });
+  const s = { Sun: 0, Moon: 1, Saturn: 6 } as const;
   it.each([
     // natural friend + temporary friend (2nd) → adhi-mitra
     ["Sun", "Moon", s.Sun, s.Moon, "adhi-mitra"],
@@ -180,5 +178,17 @@ describe("chara karakas", () => {
     expect(eight[0]).toEqual({ karaka: "AK", planet: "Sun" });
     expect(eight[7]).toEqual({ karaka: "DK", planet: "Moon" });
     expect(charaKarakas(ctx, 7)).toHaveLength(7);
+  });
+});
+
+describe("derived sub-periods (explorer)", () => {
+  it("splits a period into nine contiguous sub-periods starting with its own lord", async () => {
+    const { subPeriodsOf } = await import("../src/index.ts");
+    const subs = subPeriodsOf({ level: "PD", path: ["Venus", "Sun", "Moon"], start: "2020-01-01", end: "2020-03-01" });
+    expect(subs).toHaveLength(9);
+    expect(subs[0]!.path).toEqual(["Venus", "Sun", "Moon", "Moon"]);
+    expect(subs[0]!.start).toBe("2020-01-01");
+    expect(subs[8]!.end).toBe("2020-03-01");
+    for (let i = 1; i < 9; i++) expect(subs[i]!.start).toBe(subs[i - 1]!.end);
   });
 });

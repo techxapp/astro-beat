@@ -1,0 +1,23 @@
+{
+  "name": "@astro/chartfile",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astro/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@astro/core": "workspace:*",
+    "fast-check": "^4.10.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.2"
+  }
+}

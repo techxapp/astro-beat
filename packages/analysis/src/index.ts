@@ -18,3 +18,4 @@ export {
   kpContext, houseSignificators, planetSignifies, analyzeKp, kpFactRefs, type SubDivision, type KpLords,
 } from "./kp/index.ts";
 export * from "./tables.ts";
+export { subPeriodsOf } from "./subperiods.ts";

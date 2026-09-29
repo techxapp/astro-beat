@@ -85,7 +85,7 @@ function systemChart(m: ChartMoment, ayanamsaId: AyanamsaId, nodeType: "mean" | 
   return {
     ascendantLon: siderealAngles(m, ayanamsaId).ascendant,
     planets,
-    dasha: { yearLength, periods: vimshottari(moon.lon, m.jdUt, { yearLength, depth: 4 }) },
+    dasha: { yearLength, periods: vimshottari(moon.lon, m.jdUt, { yearLength, depth: 3 }) },
   };
 }
 
