@@ -25,7 +25,7 @@ jobs:
       - name: Licence gate (AGPL-compatible dependencies only)
         run: pnpm licenses:check
       - name: Inversion harness (residual re-identification threshold)
-        run: pnpm inversion-report --check
+        run: pnpm inversion-report --check --charts 2
 
   e2e:
     runs-on: ubuntu-latest

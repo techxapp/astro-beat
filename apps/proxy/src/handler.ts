@@ -67,8 +67,14 @@ function corsHeaders(origin: string | null, cfg: ProxyConfig): Record<string, st
 }
 
 class HttpError extends Error {
-  constructor(readonly status: number, readonly code: ErrorCode, readonly extra: Partial<ErrorResponse> = {}) {
+  readonly status: number;
+  readonly code: ErrorCode;
+  readonly extra: Partial<ErrorResponse>;
+  constructor(status: number, code: ErrorCode, extra: Partial<ErrorResponse> = {}) {
     super(code);
+    this.status = status;
+    this.code = code;
+    this.extra = extra;
   }
 }
 

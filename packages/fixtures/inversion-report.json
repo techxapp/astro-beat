@@ -1,0 +1,525 @@
+{
+ "generated": "2026-09-29",
+ "summary": {
+  "parashari": {
+   "minEffectiveHours": 0.002333333333333333,
+   "medianEffectiveHours": 0.019814814814814813,
+   "minDays": 1,
+   "medianDays": 1,
+   "medianHours": 3.8333333333333335
+  },
+  "kp": {
+   "minEffectiveHours": 0,
+   "medianEffectiveHours": 0.000055555555555555565,
+   "minDays": 1,
+   "medianDays": 1,
+   "medianHours": 1.3333333333333333
+  }
+ },
+ "rows": [
+  {
+   "chart": "g01",
+   "system": "parashari",
+   "topic": "career",
+   "candidateDays": 2,
+   "candidateHours": 3.3333333333333335,
+   "locationFraction": 0.005944444444444444,
+   "effectiveHours": 0.019814814814814813
+  },
+  {
+   "chart": "g01",
+   "system": "parashari",
+   "topic": "marriage",
+   "candidateDays": 2,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008500000000000002,
+   "effectiveHours": 0.048166666666666684
+  },
+  {
+   "chart": "g01",
+   "system": "parashari",
+   "topic": "finance",
+   "candidateDays": 2,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008500000000000002,
+   "effectiveHours": 0.048166666666666684
+  },
+  {
+   "chart": "g01",
+   "system": "parashari",
+   "topic": "health",
+   "candidateDays": 2,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008500000000000002,
+   "effectiveHours": 0.048166666666666684
+  },
+  {
+   "chart": "g01",
+   "system": "parashari",
+   "topic": "education",
+   "candidateDays": 2,
+   "candidateHours": 2.1666666666666665,
+   "locationFraction": 0.003290598290598291,
+   "effectiveHours": 0.007129629629629631
+  },
+  {
+   "chart": "g01",
+   "system": "parashari",
+   "topic": "children",
+   "candidateDays": 2,
+   "candidateHours": 4.833333333333333,
+   "locationFraction": 0.004823754789272031,
+   "effectiveHours": 0.023314814814814816
+  },
+  {
+   "chart": "g01",
+   "system": "parashari",
+   "topic": "general",
+   "candidateDays": 2,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008500000000000002,
+   "effectiveHours": 0.048166666666666684
+  },
+  {
+   "chart": "g01",
+   "system": "kp",
+   "topic": "career",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.0001111111111111111,
+   "effectiveHours": 0.0001111111111111111
+  },
+  {
+   "chart": "g01",
+   "system": "kp",
+   "topic": "marriage",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.000055555555555555565,
+   "effectiveHours": 0.000055555555555555565
+  },
+  {
+   "chart": "g01",
+   "system": "kp",
+   "topic": "finance",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.0001111111111111111,
+   "effectiveHours": 0.0001111111111111111
+  },
+  {
+   "chart": "g01",
+   "system": "kp",
+   "topic": "health",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.000055555555555555565,
+   "effectiveHours": 0.000055555555555555565
+  },
+  {
+   "chart": "g01",
+   "system": "kp",
+   "topic": "education",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.000055555555555555565,
+   "effectiveHours": 0.000055555555555555565
+  },
+  {
+   "chart": "g01",
+   "system": "kp",
+   "topic": "children",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.0004444444444444444,
+   "effectiveHours": 0.0004444444444444444
+  },
+  {
+   "chart": "g01",
+   "system": "kp",
+   "topic": "general",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g02",
+   "system": "parashari",
+   "topic": "career",
+   "candidateDays": 1,
+   "candidateHours": 4.5,
+   "locationFraction": 0.003460905349794239,
+   "effectiveHours": 0.015574074074074075
+  },
+  {
+   "chart": "g02",
+   "system": "parashari",
+   "topic": "marriage",
+   "candidateDays": 1,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008574074074074073,
+   "effectiveHours": 0.04858641975308641
+  },
+  {
+   "chart": "g02",
+   "system": "parashari",
+   "topic": "finance",
+   "candidateDays": 1,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008574074074074073,
+   "effectiveHours": 0.04858641975308641
+  },
+  {
+   "chart": "g02",
+   "system": "parashari",
+   "topic": "health",
+   "candidateDays": 1,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008574074074074073,
+   "effectiveHours": 0.04858641975308641
+  },
+  {
+   "chart": "g02",
+   "system": "parashari",
+   "topic": "education",
+   "candidateDays": 1,
+   "candidateHours": 2,
+   "locationFraction": 0.0032222222222222222,
+   "effectiveHours": 0.0064444444444444445
+  },
+  {
+   "chart": "g02",
+   "system": "parashari",
+   "topic": "children",
+   "candidateDays": 1,
+   "candidateHours": 1.6666666666666667,
+   "locationFraction": 0.007211111111111111,
+   "effectiveHours": 0.012018518518518519
+  },
+  {
+   "chart": "g02",
+   "system": "parashari",
+   "topic": "general",
+   "candidateDays": 1,
+   "candidateHours": 5.666666666666667,
+   "locationFraction": 0.008574074074074073,
+   "effectiveHours": 0.04858641975308641
+  },
+  {
+   "chart": "g02",
+   "system": "kp",
+   "topic": "career",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g02",
+   "system": "kp",
+   "topic": "marriage",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g02",
+   "system": "kp",
+   "topic": "finance",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g02",
+   "system": "kp",
+   "topic": "health",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0.00005555555555555556,
+   "effectiveHours": 0.00007407407407407407
+  },
+  {
+   "chart": "g02",
+   "system": "kp",
+   "topic": "education",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0.00005555555555555556,
+   "effectiveHours": 0.00007407407407407407
+  },
+  {
+   "chart": "g02",
+   "system": "kp",
+   "topic": "children",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g02",
+   "system": "kp",
+   "topic": "general",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g03",
+   "system": "parashari",
+   "topic": "career",
+   "candidateDays": 1,
+   "candidateHours": 1.5,
+   "locationFraction": 0.005580246913580247,
+   "effectiveHours": 0.00837037037037037
+  },
+  {
+   "chart": "g03",
+   "system": "parashari",
+   "topic": "marriage",
+   "candidateDays": 1,
+   "candidateHours": 1.5,
+   "locationFraction": 0.009209876543209877,
+   "effectiveHours": 0.013814814814814814
+  },
+  {
+   "chart": "g03",
+   "system": "parashari",
+   "topic": "finance",
+   "candidateDays": 1,
+   "candidateHours": 1.5,
+   "locationFraction": 0.009209876543209877,
+   "effectiveHours": 0.013814814814814814
+  },
+  {
+   "chart": "g03",
+   "system": "parashari",
+   "topic": "health",
+   "candidateDays": 1,
+   "candidateHours": 1.5,
+   "locationFraction": 0.009209876543209877,
+   "effectiveHours": 0.013814814814814814
+  },
+  {
+   "chart": "g03",
+   "system": "parashari",
+   "topic": "education",
+   "candidateDays": 1,
+   "candidateHours": 0.6666666666666666,
+   "locationFraction": 0.0035,
+   "effectiveHours": 0.002333333333333333
+  },
+  {
+   "chart": "g03",
+   "system": "parashari",
+   "topic": "children",
+   "candidateDays": 1,
+   "candidateHours": 1.5,
+   "locationFraction": 0.00788888888888889,
+   "effectiveHours": 0.011833333333333335
+  },
+  {
+   "chart": "g03",
+   "system": "parashari",
+   "topic": "general",
+   "candidateDays": 1,
+   "candidateHours": 1.5,
+   "locationFraction": 0.009209876543209877,
+   "effectiveHours": 0.013814814814814814
+  },
+  {
+   "chart": "g03",
+   "system": "kp",
+   "topic": "career",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g03",
+   "system": "kp",
+   "topic": "marriage",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g03",
+   "system": "kp",
+   "topic": "finance",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g03",
+   "system": "kp",
+   "topic": "health",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.000055555555555555565,
+   "effectiveHours": 0.000055555555555555565
+  },
+  {
+   "chart": "g03",
+   "system": "kp",
+   "topic": "education",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0.00016666666666666666,
+   "effectiveHours": 0.00016666666666666666
+  },
+  {
+   "chart": "g03",
+   "system": "kp",
+   "topic": "children",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g03",
+   "system": "kp",
+   "topic": "general",
+   "candidateDays": 1,
+   "candidateHours": 1,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g04",
+   "system": "parashari",
+   "topic": "career",
+   "candidateDays": 1,
+   "candidateHours": 2,
+   "locationFraction": 0.008962962962962964,
+   "effectiveHours": 0.01792592592592593
+  },
+  {
+   "chart": "g04",
+   "system": "parashari",
+   "topic": "marriage",
+   "candidateDays": 1,
+   "candidateHours": 3.8333333333333335,
+   "locationFraction": 0.009888888888888892,
+   "effectiveHours": 0.03790740740740742
+  },
+  {
+   "chart": "g04",
+   "system": "parashari",
+   "topic": "finance",
+   "candidateDays": 1,
+   "candidateHours": 3.8333333333333335,
+   "locationFraction": 0.009888888888888892,
+   "effectiveHours": 0.03790740740740742
+  },
+  {
+   "chart": "g04",
+   "system": "parashari",
+   "topic": "health",
+   "candidateDays": 1,
+   "candidateHours": 3.8333333333333335,
+   "locationFraction": 0.009888888888888892,
+   "effectiveHours": 0.03790740740740742
+  },
+  {
+   "chart": "g04",
+   "system": "parashari",
+   "topic": "education",
+   "candidateDays": 1,
+   "candidateHours": 1.5,
+   "locationFraction": 0.003790123456790124,
+   "effectiveHours": 0.0056851851851851855
+  },
+  {
+   "chart": "g04",
+   "system": "parashari",
+   "topic": "children",
+   "candidateDays": 1,
+   "candidateHours": 1.1666666666666667,
+   "locationFraction": 0.00995238095238095,
+   "effectiveHours": 0.01161111111111111
+  },
+  {
+   "chart": "g04",
+   "system": "parashari",
+   "topic": "general",
+   "candidateDays": 1,
+   "candidateHours": 3.8333333333333335,
+   "locationFraction": 0.009888888888888892,
+   "effectiveHours": 0.03790740740740742
+  },
+  {
+   "chart": "g04",
+   "system": "kp",
+   "topic": "career",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0.00005555555555555556,
+   "effectiveHours": 0.00007407407407407407
+  },
+  {
+   "chart": "g04",
+   "system": "kp",
+   "topic": "marriage",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0.00005555555555555556,
+   "effectiveHours": 0.00007407407407407407
+  },
+  {
+   "chart": "g04",
+   "system": "kp",
+   "topic": "finance",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0.00008333333333333333,
+   "effectiveHours": 0.0001111111111111111
+  },
+  {
+   "chart": "g04",
+   "system": "kp",
+   "topic": "health",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0.00004166666666666667,
+   "effectiveHours": 0.00005555555555555556
+  },
+  {
+   "chart": "g04",
+   "system": "kp",
+   "topic": "education",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0.0002777777777777778,
+   "effectiveHours": 0.00037037037037037035
+  },
+  {
+   "chart": "g04",
+   "system": "kp",
+   "topic": "children",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  },
+  {
+   "chart": "g04",
+   "system": "kp",
+   "topic": "general",
+   "candidateDays": 1,
+   "candidateHours": 1.3333333333333333,
+   "locationFraction": 0,
+   "effectiveHours": 0
+  }
+ ]
+}

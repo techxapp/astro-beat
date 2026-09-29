@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Licence gate: every production dependency must be AGPL-3.0-compatible.
-// Uses `pnpm licenses list --prod --json` (pnpm ≥ 8).
+// Uses `pnpm licenses list --prod --json --recursive` (pnpm ≥ 8). Dev-only tools are not distributed.
 import { execFileSync } from "node:child_process";
 
 const ALLOWED = new Set([
@@ -8,7 +8,7 @@ const ALLOWED = new Set([
   "BlueOak-1.0.0", "Python-2.0", "CC-BY-4.0", "LGPL-3.0-or-later", "GPL-3.0-or-later", "AGPL-3.0-or-later", "AGPL-3.0-only",
 ]);
 
-const out = execFileSync("pnpm", ["licenses", "list", "--prod", "--json"], { encoding: "utf8" });
+const out = execFileSync("pnpm", ["licenses", "list", "--prod", "--json", "--recursive"], { encoding: "utf8" });
 const byLicense = JSON.parse(out);
 const problems = [];
 for (const [license, pkgs] of Object.entries(byLicense)) {

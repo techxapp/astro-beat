@@ -32,6 +32,11 @@ export default tseslint.config(
     },
   },
   {
+    // TypeScript already checks identifiers; no-undef misfires on type-only globals.
+    files: ["**/*.ts", "**/*.svelte"],
+    rules: { "no-undef": "off" },
+  },
+  {
     files: ["**/*.svelte", "**/*.svelte.ts"],
     languageOptions: { parserOptions: { parser: tseslint.parser, extraFileExtensions: [".svelte"] } },
     rules: {

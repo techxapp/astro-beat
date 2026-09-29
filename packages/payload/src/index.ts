@@ -8,8 +8,10 @@ export { TOPIC_SPECS, KP_TOPIC_SPECS, type TopicSpec, type KpTopicSpec, type Per
 export { scanForLeaks, type LeakFinding } from "./leaks.ts";
 
 export class PayloadLeakError extends Error {
-  constructor(readonly findings: ReturnType<typeof scanForLeaks>) {
+  readonly findings: ReturnType<typeof scanForLeaks>;
+  constructor(findings: ReturnType<typeof scanForLeaks>) {
     super(`Refusing to send: ${findings.length} suspicious token(s) in the request body.`);
+    this.findings = findings;
     this.name = "PayloadLeakError";
   }
 }

@@ -1,0 +1,5 @@
+{
+  "_note": "Regression guards only, set just below the values measured on 2026-09-29 (see inversion-report.json). The real privacy threshold is open question Q1. KP effective hours are below the harness grid resolution (1° longitude), hence 0.",
+  "minEffectiveHours": { "parashari": 0.001, "kp": 0 },
+  "minCandidateDays": { "parashari": 1, "kp": 1 }
+}

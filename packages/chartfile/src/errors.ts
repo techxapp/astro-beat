@@ -4,8 +4,10 @@ export type ImportErrorCode =
   | "checksum_mismatch" | "needs_passphrase" | "decrypt_failed" | "sanity_failed";
 
 export class ImportError extends Error {
-  constructor(readonly code: ImportErrorCode, message: string) {
+  readonly code: ImportErrorCode;
+  constructor(code: ImportErrorCode, message: string) {
     super(message);
+    this.code = code;
     this.name = "ImportError";
   }
 }

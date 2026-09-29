@@ -8,6 +8,7 @@ import type { System, Topic } from "@astro/schema/enums";
 import type { StoredPrediction } from "@astro/schema/file";
 import type { BirthInput } from "@astro/schema/identifying";
 import type { Analysis } from "@astro/schema/local";
+import { todayIso } from "../lib/dates.ts";
 import { callWorker } from "../workers/client.ts";
 import { clearEverything, Vault } from "../vault/vault.ts";
 import type { ProfileRecord, ProfileSummary } from "./types.ts";
@@ -15,10 +16,7 @@ import type { ProfileRecord, ProfileSummary } from "./types.ts";
 export type Screen =
   | "welcome" | "profiles" | "birth" | "explorer" | "files" | "topic" | "consent" | "results" | "history" | "settings" | "about";
 
-export const todayIso = (): string => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+export { todayIso };
 
 class Nav {
   screen = $state<Screen>("welcome");

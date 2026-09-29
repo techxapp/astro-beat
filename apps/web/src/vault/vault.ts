@@ -145,9 +145,11 @@ export class Vault {
     const plain: [string, unknown][] = [];
     for (const k of keys) plain.push([k, await this.unseal(await this.store.get("records", k) as Sealed, old)]);
     this.dek = newDek;
+    // Seal everything first: an IndexedDB transaction auto-commits across an await on WebCrypto.
+    const sealed: [string, Sealed][] = [];
+    for (const [k, v] of plain) sealed.push([k, await this.seal(v)]);
     const tx = this.store.transaction("records", "readwrite");
-    for (const [k, v] of plain) await tx.store.put(await this.seal(v), k);
-    await tx.done;
+    await Promise.all([...sealed.map(([k, v]) => tx.store.put(v, k)), tx.done]);
   }
 
   async setPassphrase(passphrase: string): Promise<void> {

@@ -23,7 +23,12 @@ interface Window {
 
 /** Shared window logic, used by the in-memory store and the Durable Object. */
 export class WindowTable {
-  constructor(private readonly load: (key: string) => Promise<Window | undefined>, private readonly save: (key: string, w: Window) => Promise<void>) {}
+  private readonly load: (key: string) => Promise<Window | undefined>;
+  private readonly save: (key: string, w: Window) => Promise<void>;
+  constructor(load: (key: string) => Promise<Window | undefined>, save: (key: string, w: Window) => Promise<void>) {
+    this.load = load;
+    this.save = save;
+  }
 
   async hit(key: string, limit: number, windowSec: number, nowMs: number): Promise<HitResult> {
     const w = await this.current(key, windowSec, nowMs);

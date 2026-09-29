@@ -20,8 +20,10 @@ export interface ModelResult {
 }
 
 export class UpstreamError extends Error {
-  constructor(readonly kind: "timeout" | "http" | "shape" | "refusal", message: string) {
+  readonly kind: "timeout" | "http" | "shape" | "refusal";
+  constructor(kind: "timeout" | "http" | "shape" | "refusal", message: string) {
     super(message);
+    this.kind = kind;
     this.name = "UpstreamError";
   }
 }

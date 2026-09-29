@@ -5,8 +5,14 @@ import { ErrorResponse, MetaResponse, PredictionResponse, SessionResponse } from
 const API = __API_ORIGIN__;
 
 export class ApiError extends Error {
-  constructor(readonly status: number, readonly code: string, readonly retryAfter?: number) {
+  readonly status: number;
+  readonly code: string;
+  readonly retryAfter: number | undefined;
+  constructor(status: number, code: string, retryAfter?: number) {
     super(code);
+    this.status = status;
+    this.code = code;
+    this.retryAfter = retryAfter;
     this.name = "ApiError";
   }
 }
