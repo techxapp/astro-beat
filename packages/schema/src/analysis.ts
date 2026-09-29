@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { EngineSettings } from "./chart.ts";
 import {
-  CharaKaraka, Dignity, FactId, HouseNum, Nakshatra, PeriodLabel, Planet, Sign, Varga,
+  CharaKaraka, Dignity, FactId, HouseNum, Nakshatra, PeriodLabel, Planet, Sign, Varga, type YogaFamily,
 } from "./enums.ts";
 
 export { FactId, PeriodLabel };
@@ -16,6 +16,18 @@ export const YOGA_IDS = [
 ] as const;
 export const YogaId = z.enum(YOGA_IDS);
 export type YogaId = z.infer<typeof YogaId>;
+
+/** Family of each yoga (topic allowlists select by family). */
+export const YOGA_FAMILY: Readonly<Record<YogaId, YogaFamily>> = {
+  ruchaka: "mahapurusha", bhadra: "mahapurusha", hamsa: "mahapurusha", malavya: "mahapurusha", sasa: "mahapurusha",
+  gajakesari: "lunar", sunapha: "lunar", anapha: "lunar", durudhara: "lunar", kemadruma: "lunar", "chandra-mangala": "lunar", adhi: "lunar",
+  "budha-aditya": "solar",
+  "raja-kendra-trikona": "raja",
+  dhana: "dhana",
+  "viparita-harsha": "viparita", "viparita-sarala": "viparita", "viparita-vimala": "viparita",
+  "neecha-bhanga": "cancellation",
+  parivartana: "parivartana",
+};
 
 export const YogaModifier = z.enum([
   "participant-exalted", "participant-debilitated", "participant-combust", "involves-dusthana", "cancelled", "in-kendra",
