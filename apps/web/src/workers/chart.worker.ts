@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Chart worker: @astro/core (ephemeris) wired into @astro/analysis. No network access.
 /// <reference lib="webworker" />
+import "../lib/zod-config.ts";
 import { analyze, kpLordsAt } from "@astro/analysis";
 import { momentFromBirth, ReferenceEngine } from "@astro/core";
 import type { CuspSensitivity, Envelope, WorkerRequest, WorkerResponse } from "./protocol.ts";

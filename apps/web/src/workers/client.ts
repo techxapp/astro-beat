@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { scriptUrl } from "../lib/trusted.ts";
+import workerUrl from "./chart.worker.ts?worker&url";
 import type { Envelope, WorkerRequest, WorkerResponse } from "./protocol.ts";
 
 type Result<T extends WorkerRequest["type"]> = Extract<WorkerResponse, { type: T }>;
@@ -9,7 +11,7 @@ const pending = new Map<number, { resolve: (r: WorkerResponse) => void; reject: 
 
 function getWorker(): Worker {
   if (worker) return worker;
-  worker = new Worker(new URL("./chart.worker.ts", import.meta.url), { type: "module", name: "chart" });
+  worker = new Worker(scriptUrl(workerUrl), { type: "module", name: "chart" });
   worker.onmessage = (e: MessageEvent<Envelope<WorkerResponse>>) => {
     const p = pending.get(e.data.id);
     if (!p) return;
