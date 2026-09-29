@@ -1,0 +1,10 @@
+{
+  "name": "Astro-Beat",
+  "short_name": "Astro-Beat",
+  "description": "Privacy-first Vedic astrology: charts and analysis computed on your device.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16122b",
+  "theme_color": "#2b2250",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

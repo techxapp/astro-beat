@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Cloudflare Pages headers. Replace api.astro-beat.example with the real proxy origin at deploy.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.astro-beat.example; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; require-trusted-types-for 'script'; trusted-types svelte-trusted-html
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  X-Frame-Options: DENY
+/sw.js
+  Cache-Control: no-cache

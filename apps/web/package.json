@@ -1,0 +1,34 @@
+{
+  "name": "@astro/web",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json --fail-on-warnings && tsc -p tsconfig.sw.json && tsc -p tsconfig.node.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astro/analysis": "workspace:*",
+    "@astro/chartfile": "workspace:*",
+    "@astro/core": "workspace:*",
+    "@astro/payload": "workspace:*",
+    "@astro/schema": "workspace:*",
+    "@photostructure/tz-lookup": "^11.7.0",
+    "idb": "^8.0.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "fake-indexeddb": "^6.0.0",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.7.6",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2",
+    "@types/node": "^22.0.0"
+  }
+}
