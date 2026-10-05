@@ -2,7 +2,7 @@
 <script lang="ts">
   import tzlookup from "@photostructure/tz-lookup";
   import { BirthInput } from "@astro/schema/identifying";
-  import { placeLabel, searchPlaces, type Place } from "../lib/gazetteer.ts";
+  import { placeLabel, searchPlaces, searchPlacesOnline, type Place } from "../lib/gazetteer.ts";
   import { formatOffset, isValidZone, utcOffsetMinutes } from "../lib/tz.ts";
   import { chart, nav, profiles } from "../state/app.svelte.ts";
 
@@ -21,16 +21,42 @@
   let notes = $state("");
   let error = $state<string | null>(null);
 
+  let searched = $state(false);
+  let onlineBusy = $state(false);
+  let onlineNote = $state<string | null>(null);
+
   $effect(() => {
     const q = query;
     let cancelled = false;
+    searched = false;
+    onlineNote = null;
     searchPlaces(q).then((r) => {
-      if (!cancelled) results = r;
+      if (!cancelled) {
+        results = r;
+        searched = true;
+      }
     });
     return () => {
       cancelled = true;
     };
   });
+
+  // Explicit user action only: this sends the typed place text to our proxy.
+  async function searchOnline(): Promise<void> {
+    const q = query;
+    onlineBusy = true;
+    onlineNote = null;
+    try {
+      const found = await searchPlacesOnline(q);
+      if (q !== query) return;
+      results = found;
+      if (found.length === 0) onlineNote = "No matches online either. You can enter coordinates manually below.";
+    } catch {
+      if (q === query) onlineNote = "Online search is unavailable right now. You can enter coordinates manually below.";
+    } finally {
+      onlineBusy = false;
+    }
+  }
 
   function pick(p: Place): void {
     placeText = placeLabel(p);
@@ -92,7 +118,7 @@
 </script>
 
 <h1>New chart</h1>
-<p class="muted small">Everything on this form stays on this device.</p>
+<p class="muted small">Everything on this form stays on this device, unless you choose "Search online" for a place.</p>
 <form class="card" onsubmit={submit}>
   <label for="name">Name (optional)</label>
   <input id="name" maxlength="100" bind:value={name} autocomplete="off" />
@@ -127,6 +153,14 @@
       {/each}
     </ul>
   {/if}
+  {#if searched && query.trim().length >= 2}
+    <p class="small muted">
+      {results.length === 0 ? "Not in the offline list." : "Not the one you want?"}
+      <button type="button" disabled={onlineBusy} onclick={searchOnline}>{onlineBusy ? "Searching…" : "Search online"}</button>
+      Sends the text you typed ("{query.trim()}") to our server and a geocoding provider. Nothing else from this form is sent.
+    </p>
+  {/if}
+  {#if onlineNote}<p class="small warn" role="status">{onlineNote}</p>{/if}
   {#if placeText}<p class="small">Selected: <strong>{placeText}</strong></p>{/if}
 
   <details>

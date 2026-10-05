@@ -24,6 +24,7 @@ const goodOutput = (over: Partial<PredictionOutput> = {}): PredictionOutput => (
   summary: "A steady chart for work.",
   themes: [{ title: "Work", detail: "Tenth lord well placed.", tone: "supportive", basis: ["F1"] }],
   periods: [{ period: "P1", headline: "Building", detail: "A building phase.", confidence: "moderate", basis: ["F2"] }],
+  table: [],
   limitations: [],
   declined: [],
   ...over,
@@ -76,7 +77,7 @@ describe("meta and CORS", () => {
     const m = MetaResponse.parse(await r.json());
     expect(m.sourceUrl).toBe(CONFIG.sourceUrl);
     expect(m.commit).toBe("abc123");
-    expect(m.prompts).toContain("kp-marriage@1");
+    expect(m.prompts).toContain("kp-marriage@2");
   });
   it("answers preflight only for the exact origin", async () => {
     const ok = await handler()(new Request("https://api.test/v1/predict", { method: "OPTIONS", headers: { origin: ORIGIN } }));
@@ -203,11 +204,11 @@ describe("predict: success and post-checks", () => {
     const r = await predict(h, body(), await session(h));
     expect(r.status).toBe(200);
     const res = PredictionResponse.parse(r.body);
-    expect(res.promptVersion).toBe("parashari-career@1");
+    expect(res.promptVersion).toBe("parashari-career@2");
     expect(res.system).toBe("parashari");
     expect(calls[0]!.instructions).toContain("Parashari");
     expect(calls[0]!.input.startsWith("CHART_FACTS")).toBe(true);
-    expect(calls[0]!.maxOutputTokens).toBe(1500);
+    expect(calls[0]!.maxOutputTokens).toBe(8000);
   });
   it("flags unknown fact ids and periods and redacts dates", async () => {
     const h = handler();
@@ -224,6 +225,23 @@ describe("predict: success and post-checks", () => {
     expect(res.checks.unknownPeriods).toEqual(["P99"]);
     expect(res.checks.datesRedacted).toBe(3);
     expect(JSON.stringify(res.output)).not.toMatch(/2027|2031|38/);
+  });
+  it("checks and cleans the at-a-glance table", async () => {
+    const h = handler();
+    modelImpl = async () => ({
+      text: JSON.stringify(goodOutput({
+        table: [
+          { label: "Most likely marriage window", periods: ["P1", "P98"], detail: "Around June 2028 looks good.", confidence: "tentative" },
+          { label: "Partner's personality", periods: [], detail: "Calm and practical.", confidence: "moderate" },
+        ],
+      })),
+      model: "m", inputTokens: 1, outputTokens: 1,
+    });
+    const res = PredictionResponse.parse((await predict(h, body(), await session(h))).body);
+    expect(res.checks.unknownPeriods).toEqual(["P98"]);
+    expect(res.checks.datesRedacted).toBe(1);
+    expect(JSON.stringify(res.output.table)).not.toMatch(/2028/);
+    expect(res.output.table).toHaveLength(2);
   });
   it("logs metadata only, never bodies", async () => {
     const h = handler();

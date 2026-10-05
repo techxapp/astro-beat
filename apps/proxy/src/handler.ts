@@ -4,10 +4,12 @@
 // Never logs bodies: only route, status, latency, token counts and a hashed session prefix.
 import { getPrompt, listPromptIds, outputJsonSchema, userMessage } from "@astro/prompts";
 import {
-  PredictionOutput, PredictionRequest, PredictionResponse, type ErrorCode, type ErrorResponse, type MetaResponse,
+  GeocodeRequest, PredictionOutput, PredictionRequest, PredictionResponse, type ErrorCode, type ErrorResponse, type GeocodeResponse,
+  type MetaResponse,
 } from "@astro/schema/api";
 import { PAYLOAD_VERSION } from "@astro/schema/payload";
 import type { CounterStore } from "./counters.ts";
+import { GeocodeError, openMeteoGeocoder, type Geocoder } from "./geocode.ts";
 import { UpstreamError, type ModelClient } from "./openai.ts";
 import { postCheck } from "./postcheck.ts";
 import { issueToken, sha256Prefix, verifyToken } from "./token.ts";
@@ -22,12 +24,16 @@ export interface ProxyConfig {
 }
 
 export const LIMITS = {
-  maxBodyBytes: 32 * 1024,
+  maxBodyBytes: 64 * 1024, // month-level periods for three ADs put the largest payloads near 32 KB
   perMinutePerIp: 10,
   perDayPerSession: 20,
   sessionsPerHourPerIp: 10,
-  maxOutputTokens: 1500,
+  maxOutputTokens: 8000, // includes hidden reasoning tokens; 1500 starved a reasoning model into an empty response
   timeoutMs: 60_000,
+  geocodeMaxBodyBytes: 512,
+  geocodePerMinutePerIp: 20,
+  geocodePerDayPerSession: 200,
+  geocodeTimeoutMs: 8_000,
 } as const;
 
 export interface LogLine {
@@ -44,6 +50,7 @@ export interface HandlerDeps {
   config: ProxyConfig;
   counters: CounterStore;
   model: ModelClient;
+  geocoder?: Geocoder;
   now?: () => number;
   log?: (line: LogLine) => void;
 }
@@ -112,6 +119,7 @@ async function readBody(req: Request, max: number): Promise<string> {
 
 export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Response> {
   const { config: cfg, counters, model } = deps;
+  const geocoder = deps.geocoder ?? openMeteoGeocoder();
   const now = deps.now ?? Date.now;
   const log = deps.log ?? ((l: LogLine) => console.log(JSON.stringify(l)));
   const outputSchema = outputJsonSchema();
@@ -147,7 +155,8 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
         return respond(200, body);
       }
 
-      if (url.pathname !== "/v1/session" && url.pathname !== "/v1/predict") throw new HttpError(404, "not_found");
+      const isGeocode = url.pathname === "/v1/geocode";
+      if (url.pathname !== "/v1/session" && url.pathname !== "/v1/predict" && !isGeocode) throw new HttpError(404, "not_found");
       if (req.method !== "POST") throw new HttpError(405, "method_not_allowed");
       // 1. Origin (exact match only)
       if (origin !== cfg.allowedOrigin) throw new HttpError(403, "bad_origin");
@@ -165,7 +174,7 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
       // 2. Content-Type and size
       const ct = req.headers.get("content-type") ?? "";
       if (!/^application\/json(;\s*charset=utf-8)?$/i.test(ct.trim())) throw new HttpError(415, "unsupported_media_type");
-      const text = await readBody(req, LIMITS.maxBodyBytes);
+      const text = await readBody(req, isGeocode ? LIMITS.geocodeMaxBodyBytes : LIMITS.maxBodyBytes);
 
       // 3. Token
       const auth = req.headers.get("authorization") ?? "";
@@ -174,9 +183,32 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
       meta.sid = await sha256Prefix(sid, 8);
 
       // 4. Rate limits
-      for (const [key, limit, window] of [[`ip:${ipKey}`, LIMITS.perMinutePerIp, 60], [`sid:${sid}`, LIMITS.perDayPerSession, 86_400]] as const) {
+      const limits = isGeocode
+        ? ([[`geoip:${ipKey}`, LIMITS.geocodePerMinutePerIp, 60], [`geosid:${sid}`, LIMITS.geocodePerDayPerSession, 86_400]] as const)
+        : ([[`ip:${ipKey}`, LIMITS.perMinutePerIp, 60], [`sid:${sid}`, LIMITS.perDayPerSession, 86_400]] as const);
+      for (const [key, limit, window] of limits) {
         const hit = await counters.hit(key, limit, window, now());
         if (!hit.allowed) throw new HttpError(429, "rate_limited", { retryAfter: hit.retryAfter });
+      }
+
+      if (isGeocode) {
+        // The query is never logged; `meta` carries only the hashed session prefix.
+        let rawQuery: unknown;
+        try {
+          rawQuery = JSON.parse(text);
+        } catch {
+          throw new HttpError(400, "invalid_json");
+        }
+        const parsedQuery = GeocodeRequest.safeParse(rawQuery);
+        if (!parsedQuery.success) throw new HttpError(400, "invalid_payload");
+        try {
+          const places = await geocoder(parsedQuery.data.q, LIMITS.geocodeTimeoutMs);
+          const body: GeocodeResponse = { places };
+          return respond(200, body);
+        } catch (e) {
+          if (e instanceof GeocodeError && e.kind === "timeout") throw new HttpError(504, "upstream_timeout");
+          throw new HttpError(502, "upstream_error");
+        }
       }
 
       // 5. Global daily token budget

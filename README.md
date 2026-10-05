@@ -5,6 +5,11 @@ full deterministic analysis are computed in the browser. Only when you ask for a
 is a small set of categorical facts for one topic sent, after you approve the exact bytes, through
 a stateless proxy to an LLM. That set has no degrees, no dates, no name and no place.
 
+Place search is offline by default (a bundled GeoNames `cities5000` index). If a town is missing,
+an explicit "Search online" button sends only the text you typed to the proxy's `POST /v1/geocode`,
+which forwards it to the Open-Meteo geocoding API. It is never sent automatically, is not logged,
+and carries no other form data.
+
 Licensed under **AGPL-3.0-or-later** (see `LICENSE`). The hosted app and proxy link to their exact
 source commit (footer, About screen, `GET /v1/meta`).
 
@@ -19,7 +24,7 @@ source commit (footer, About screen, `GET /v1/meta`).
 | `packages/prompts` | Versioned prompts per (system, topic) and the strict-mode output JSON schema |
 | `packages/chartfile` | Chart-only export (SHA-256 checksum) and encrypted profile export (PBKDF2 600k plus AES-256-GCM, header as AAD). Strict import with migrations and sanity checks |
 | `packages/fixtures` | Sentinel and golden inputs, the canary unit test, and the **inversion harness** (`pnpm inversion-report`) |
-| `apps/web` | Svelte 5 PWA: birth form (offline gazetteer, Intl historical offsets), chart worker, encrypted IndexedDB vault, explorer, files, topic picker, consent, results, history, settings |
+| `apps/web` | Svelte 5 PWA: birth form (offline gazetteer with opt-in online place search, Intl historical offsets), chart worker, encrypted IndexedDB vault, explorer, files, topic picker, consent, results, history, settings |
 | `apps/proxy` | Cloudflare Worker: origin → type and size → HMAC session → Durable Object rate limits → token budget → schema → server-owned prompt → OpenAI (`store:false`, strict schema) → output parse, grounding and date/age redaction |
 | `e2e` | Playwright: canary network capture, consent byte-equality, CSP and Trusted Types violations, Clear everything, offline PWA |
 
@@ -65,7 +70,7 @@ risk below are in place; the prompt-injection eval, the ZDR status and a written
    classical combustion orbs, neecha-bhanga with the canceller in a kendra from the lagna or Moon,
    lower longitude winning a planetary war, Rahu exalted in Taurus, KP node rule on, KP conjunctions off.
    Every yoga carries a `definition`, `variant` and `sourceNote` for your review (Q5).
-9. **Model** `gpt-5-mini` in `wrangler.toml` is a placeholder (Q8). Verify the Responses API
+9. **Model** `gpt-5.5` in `wrangler.toml` is a placeholder (Q8). Verify the Responses API
    request shape against current OpenAI docs before deploying (see `apps/proxy/src/openai.ts`).
 
 ### Measured residual risk (inversion harness; answers part of Q1)
@@ -89,6 +94,7 @@ measured values.
 
 ## Credits
 
-GeoNames (CC BY 4.0) for place data; the committed `public/geo/cities.json` is a small seed, and
-`apps/web/scripts/build-gazetteer.mjs` builds the full `cities15000` index. `@photostructure/tz-lookup`
+GeoNames (CC BY 4.0) for place data; `public/geo/cities.json` is built by
+`apps/web/scripts/build-gazetteer.mjs` from the `cities5000` dump. Open-Meteo geocoding (CC BY 4.0,
+non-commercial free tier) backs the opt-in online search. `@photostructure/tz-lookup`
 (CC0). Swiss Ephemeris (Astrodienst, AGPL option) once the production engine lands.

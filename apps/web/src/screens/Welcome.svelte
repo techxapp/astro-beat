@@ -12,7 +12,8 @@
 <h1>Your chart stays on your device</h1>
 <p>
   Astro-Beat computes your Vedic chart and a detailed analysis (placements, dignities, yogas, dashas, ashtakavarga,
-  and the KP cusps and significators) entirely in this browser. It works offline.
+  and the KP cusps and significators) entirely in this browser. It works offline. Place search is offline too, unless you press "Search online" for a town
+  that is not in the built-in list, which sends just the place name you typed.
 </p>
 
 <div class="grid2">

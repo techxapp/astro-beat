@@ -7,8 +7,8 @@ export interface PeriodWindow {
   currentMdAds: "remaining" | "all";
   /** how many following MDs to include (MD level only) */
   nextMds: number;
-  /** which ADs contribute their PDs */
-  pdsIn: "currentAd" | "currentAndNextAd";
+  /** how many ADs (the current one and the ones after it) contribute their PDs: month-level timing */
+  pdAds: number;
 }
 
 export interface TopicSpec {
@@ -28,7 +28,8 @@ export interface KpTopicSpec {
   periodWindow: PeriodWindow;
 }
 
-const WINDOW: PeriodWindow = { currentMdAds: "remaining", nextMds: 1, pdsIn: "currentAd" };
+// Three ADs of month-level periods keep the near term (this year and the next few) fine-grained.
+const WINDOW: PeriodWindow = { currentMdAds: "remaining", nextMds: 1, pdAds: 3 };
 const ALL_HOUSES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const ALL_PLANETS: Planet[] = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
 
@@ -61,7 +62,7 @@ export const TOPIC_SPECS: Readonly<Record<Topic, TopicSpec>> = {
     houses: ALL_HOUSES, karakas: ALL_PLANETS, charaKarakas: [],
     vargas: ["D9"],
     yogaFamilies: ["mahapurusha", "raja", "dhana", "viparita", "lunar", "solar", "parivartana", "cancellation"],
-    periodWindow: { currentMdAds: "remaining", nextMds: 1, pdsIn: "currentAndNextAd" },
+    periodWindow: WINDOW,
   },
 };
 
@@ -73,5 +74,5 @@ export const KP_TOPIC_SPECS: Readonly<Record<Topic, KpTopicSpec>> = {
   health: { cusps: [1, 6, 8, 12], includeSubSub: false, periodWindow: WINDOW },
   education: { cusps: [4, 9, 11], includeSubSub: false, periodWindow: WINDOW },
   children: { cusps: [2, 5, 11], includeSubSub: false, periodWindow: WINDOW },
-  general: { cusps: ALL_HOUSES, includeSubSub: false, periodWindow: { currentMdAds: "remaining", nextMds: 1, pdsIn: "currentAndNextAd" } },
+  general: { cusps: ALL_HOUSES, includeSubSub: false, periodWindow: WINDOW },
 };

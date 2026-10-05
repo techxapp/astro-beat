@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // The ONLY module allowed to perform network I/O (lint-enforced). It talks to our proxy only.
-import { ErrorResponse, MetaResponse, PredictionResponse, SessionResponse } from "@astro/schema/api";
+import { ErrorResponse, GeocodeResponse, MetaResponse, PredictionResponse, SessionResponse, type GeocodePlace } from "@astro/schema/api";
 
 const API = __API_ORIGIN__;
 
@@ -58,6 +58,24 @@ export async function sendPrediction(body: string, approvedHash: string): Promis
     throw await errorFrom(res);
   }
   return PredictionResponse.parse(await res.json());
+}
+
+/** Opt-in online place lookup. Only called from an explicit user click; sends just the typed text. */
+export async function geocodeOnline(q: string): Promise<GeocodePlace[]> {
+  const token = await getToken();
+  const res = await fetch(`${API}/v1/geocode`, {
+    method: "POST",
+    credentials: "omit",
+    referrerPolicy: "no-referrer",
+    cache: "no-store",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+    body: JSON.stringify({ q }),
+  });
+  if (!res.ok) {
+    if (res.status === 401) session = null;
+    throw await errorFrom(res);
+  }
+  return GeocodeResponse.parse(await res.json()).places;
 }
 
 export async function fetchMeta(): Promise<MetaResponse> {

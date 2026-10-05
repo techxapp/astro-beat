@@ -17,12 +17,28 @@ describe("prompts", () => {
     expect(listPromptIds()).toHaveLength(14);
   });
   it("rejects unknown pinned versions", () => {
-    expect(getPrompt("kp", "marriage", "kp-marriage@1")).not.toBeNull();
+    expect(getPrompt("kp", "marriage", "kp-marriage@2")).not.toBeNull();
     expect(getPrompt("kp", "marriage", "kp-marriage@99")).toBeNull();
-    expect(getPrompt("kp", "marriage", "parashari-marriage@1")).toBeNull();
+    expect(getPrompt("kp", "marriage", "parashari-marriage@2")).toBeNull();
   });
   it("KP prompts forbid Parashari concepts", () => {
     expect(getPrompt("kp", "career")!.instructions).toMatch(/must not be invented/);
+  });
+  it("asks for plain language and fine-grained near-term coverage", () => {
+    const text = getPrompt("parashari", "general")!.instructions;
+    expect(text).toMatch(/NO astrology jargon/);
+    expect(text).toMatch(/status is "current"/);
+    expect(text).toMatch(/month-level/);
+  });
+  it("marriage prompts (both systems) require the at-a-glance table; other topics do not", () => {
+    for (const system of ["parashari", "kp"] as const) {
+      const text = getPrompt(system, "marriage")!.instructions;
+      for (const row of ["Most likely marriage window", "When you may meet your partner", "Partner's personality", "Partner's background"]) {
+        expect(text).toContain(row);
+      }
+      expect(text).toMatch(/never predict divorce/);
+      expect(getPrompt(system, "career")!.instructions).not.toContain("Most likely marriage window");
+    }
   });
   it("health and children carry their guardrails", () => {
     expect(getPrompt("parashari", "health")!.instructions).toMatch(/Never name diseases/);

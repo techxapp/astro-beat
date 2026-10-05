@@ -41,16 +41,13 @@ export function selectPeriods(periods: readonly PeriodFact[], w: PeriodWindow): 
     p.level === "AD" && p.lords[0] === current.lords[0] && (w.currentMdAds === "all" || p.status !== "past"));
   const curAd = periods.find((p) => p.level === "AD" && p.status === "current")
     ?? periods.find((p) => p.level === "AD" && p.status === "upcoming");
-  const adKeys = new Set<string>();
-  if (curAd) {
-    adKeys.add(curAd.lords.join("|"));
-    if (w.pdsIn === "currentAndNextAd") {
-      const next = periods.find((p) => p.level === "AD" && p.order === curAd.order + 1);
-      if (next) adKeys.add(next.lords.join("|"));
-    }
-  }
+  // The current AD and the ones after it (they may spill into the next MD) contribute their PDs.
+  const pdParents = curAd
+    ? periods.filter((p) => p.level === "AD" && p.order >= curAd.order && p.order < curAd.order + w.pdAds)
+    : [];
+  const adKeys = new Set(pdParents.map((p) => p.lords.join("|")));
   const pds = periods.filter((p) => p.level === "PD" && adKeys.has(p.lords.slice(0, 2).join("|")) && p.status !== "past");
-  const chosen = new Set([...chosenMds, ...ads, ...pds]);
+  const chosen = new Set([...chosenMds, ...ads, ...pdParents, ...pds]);
   return periods.filter((p) => chosen.has(p)).slice(0, MAX_PERIODS);
 }
 

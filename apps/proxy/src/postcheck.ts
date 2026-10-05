@@ -46,6 +46,7 @@ export function postCheck(output: PredictionOutput, payload: PredictionPayload):
     if (!periods.has(p.period)) unknownPeriods.add(p.period);
     for (const b of p.basis) if (!factIds.has(b)) unknownFactIds.add(b);
   }
+  for (const row of output.table) for (const p of row.periods) if (!periods.has(p)) unknownPeriods.add(p);
   let datesRedacted = 0;
   // Redaction can lengthen a string, so clamp back to the schema's limits.
   const r = (s: string, max: number): string => {
@@ -56,6 +57,7 @@ export function postCheck(output: PredictionOutput, payload: PredictionPayload):
   const cleaned: PredictionOutput = {
     summary: r(output.summary, 1200),
     themes: output.themes.map((t) => ({ ...t, title: r(t.title, 80), detail: r(t.detail, 800) })),
+    table: output.table.map((row) => ({ ...row, label: r(row.label, 60), detail: r(row.detail, 300) })),
     periods: output.periods.map((p) => ({ ...p, headline: r(p.headline, 100), detail: r(p.detail, 600) })),
     limitations: output.limitations.map((l) => r(l, 200)),
     declined: output.declined,

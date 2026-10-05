@@ -14,6 +14,7 @@ const CHART = chartFor(2447693.1); // 1989-07-xx, Delhi
 const ANALYSIS = analyze(CHART, { asOf: "2026-09-29" });
 const { localOnly, ...PUBLIC } = ANALYSIS;
 
+
 describe("payload schema invariants (§5.3)", () => {
   // Walk the JSON Schema of PredictionPayload: every string leaf must be an enum, a literal or a
   // FactId / PeriodLabel pattern; every number leaf an integer within [0, 56].
@@ -70,6 +71,18 @@ describe("buildPayload", () => {
       });
     }
   }
+
+  it("sends month-level periods for the current AD and the next two", () => {
+    for (const system of ["parashari", "kp"] as const) {
+      const { payload } = buildPayload(PUBLIC, system, "marriage");
+      const ads = payload.periods.filter((p) => p.level === "AD");
+      const curAd = ads.find((p) => p.status === "current")!;
+      const parents = new Set(payload.periods.filter((p) => p.level === "PD").map((p) => p.lords.slice(0, 2).join("|")));
+      expect(parents.size).toBe(3);
+      expect(parents.has(curAd.lords.join("|"))).toBe(true);
+      expect(payload.periods.filter((p) => p.level === "PD" && p.status === "past")).toHaveLength(0);
+    }
+  });
 
   it("sends only the topic's vargas", () => {
     for (const topic of TOPICS) {

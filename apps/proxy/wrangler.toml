@@ -10,7 +10,7 @@ enabled = false
 
 [vars]
 ALLOWED_ORIGIN = "https://astro-beat.example"
-OPENAI_MODEL = "gpt-5-mini"
+OPENAI_MODEL = "gpt-5.5"
 DAILY_TOKEN_BUDGET = "2000000"
 SOURCE_URL = "https://github.com/techxapp/astro-beat"
 # COMMIT_SHA is injected at deploy time (see package.json "deploy").

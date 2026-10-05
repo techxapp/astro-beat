@@ -23,13 +23,21 @@ export const PredictionOutput = z.strictObject({
     tone: z.enum(["supportive", "mixed", "challenging"]),
     basis: z.array(FactId).min(1).max(8),
   })).min(1).max(6),
+  /** "At a glance" rows (marriage: timing, meeting period, partner profile). Empty when a topic has none. */
+  table: z.array(z.strictObject({
+    label: z.string().max(60),
+    /** period labels the row's timing refers to (the app prints their real dates); empty for non-timing rows */
+    periods: z.array(PeriodLabel).max(3),
+    detail: z.string().max(300),
+    confidence: z.enum(["tentative", "moderate", "stronger"]),
+  })).max(10).default([]),
   periods: z.array(z.strictObject({
     period: PeriodLabel,
     headline: z.string().max(100),
     detail: z.string().max(600),
     confidence: z.enum(["tentative", "moderate", "stronger"]),
     basis: z.array(FactId).max(6),
-  })).max(12),
+  })).max(16),
   limitations: z.array(z.string().max(200)).max(5),
   declined: z.array(z.enum(DECLINE_REASONS)).max(6),
 });
@@ -54,6 +62,24 @@ export type PredictionResponse = z.infer<typeof PredictionResponse>;
 
 export const SessionResponse = z.strictObject({ token: z.string().max(400), expiresAt: z.iso.datetime() });
 export type SessionResponse = z.infer<typeof SessionResponse>;
+
+/** Opt-in online place lookup: only the typed place text is sent. */
+export const GEOCODE_QUERY_MAX = 80;
+export const GeocodeRequest = z.strictObject({ q: z.string().trim().min(2).max(GEOCODE_QUERY_MAX) });
+export type GeocodeRequest = z.infer<typeof GeocodeRequest>;
+
+export const GeocodePlace = z.strictObject({
+  name: z.string().min(1).max(100),
+  admin: z.string().max(100),
+  country: z.string().max(8),
+  lat: z.number().min(-90).max(90),
+  lon: z.number().min(-180).max(180),
+  tz: z.string().min(1).max(64),
+});
+export type GeocodePlace = z.infer<typeof GeocodePlace>;
+
+export const GeocodeResponse = z.strictObject({ places: z.array(GeocodePlace).max(10) });
+export type GeocodeResponse = z.infer<typeof GeocodeResponse>;
 
 export const MetaResponse = z.strictObject({
   service: z.literal("astro-beat-proxy"),

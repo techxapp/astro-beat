@@ -53,6 +53,7 @@ export function openAiClient(apiKey: string, fetchImpl: typeof fetch = fetch): M
           instructions: call.instructions,
           input: call.input,
           max_output_tokens: call.maxOutputTokens,
+          reasoning: { effort: "low" },
           text: { format: { type: "json_schema", name: "prediction", schema: call.schema, strict: true } },
         }),
       });

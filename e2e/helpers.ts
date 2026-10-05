@@ -46,6 +46,13 @@ export async function captureAndStub(context: BrowserContext): Promise<Captured[
     if (url.pathname === "/v1/session") {
       return route.fulfill({ status: 200, headers: cors, contentType: "application/json", body: JSON.stringify({ token: "00000000-0000-4000-8000-000000000000.9999999999.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", expiresAt: "2099-01-01T00:00:00.000Z" }) });
     }
+    if (url.pathname === "/v1/geocode") {
+      const { q } = JSON.parse(request.postData() ?? "{}") as { q?: string };
+      const places = /zzyzx/i.test(q ?? "")
+        ? [{ name: "Zzyzxville", admin: "Nowhere State", country: "IN", lat: 25.5, lon: 85.1, tz: "Asia/Kolkata" }]
+        : [];
+      return route.fulfill({ status: 200, headers: cors, contentType: "application/json", body: JSON.stringify({ places }) });
+    }
     if (url.pathname === "/v1/predict") {
       const req = JSON.parse(request.postData() ?? "{}");
       const payload = req.payload;
@@ -53,12 +60,12 @@ export async function captureAndStub(context: BrowserContext): Promise<Captured[
       return route.fulfill({
         status: 200, headers: cors, contentType: "application/json",
         body: JSON.stringify({
-          requestId: req.requestId, system: payload.system, topic: payload.topic, promptVersion: `${payload.system}-${payload.topic}@1`, model: "stub",
+          requestId: req.requestId, system: payload.system, topic: payload.topic, promptVersion: `${payload.system}-${payload.topic}@2`, model: "stub",
           output: {
             summary: `A stubbed reading. ${firstPeriod} looks steady.`,
             themes: [{ title: "Stub theme", detail: "Grounded in F1.", tone: "mixed", basis: ["F1"] }],
             periods: [{ period: firstPeriod, headline: "Steady", detail: "A steady period.", confidence: "tentative", basis: ["F1"] }],
-            limitations: [], declined: [],
+            table: [], limitations: [], declined: [],
           },
           checks: { unknownFactIds: [], unknownPeriods: [], datesRedacted: 0 },
           usage: { inputTokens: 1, outputTokens: 1 },

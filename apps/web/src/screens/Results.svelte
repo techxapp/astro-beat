@@ -47,22 +47,41 @@
 
   <section class="card"><p>{@render rich(r.output.summary)}</p></section>
 
-  <h2>Themes</h2>
+  {#if r.output.table.length}
+    <h2>At a glance</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>What</th><th>When</th><th>Details</th><th>Confidence</th></tr></thead>
+        <tbody>
+          {#each r.output.table as row, i (i)}
+            <tr>
+              <th scope="row">{row.label}</th>
+              <td>{row.periods.length ? row.periods.map((p) => dateRange(s.periodDates[p])).join(", ") : "–"}</td>
+              <td>{@render rich(row.detail)}</td>
+              <td><span class="chip">{row.confidence}</span></td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+  {/if}
+
+  <h2>Key takeaways</h2>
   {#each r.output.themes as t, i (i)}
     <section class="card">
       <h3>{t.title} <span class="chip">{t.tone}</span></h3>
       <p>{@render rich(t.detail)}</p>
-      <p class="small">
-        Based on:
+      <details class="small">
+        <summary>Why? (chart details)</summary>
         {#each t.basis as b (b)}
           <button class="chip" onclick={() => openFact(b)} title={unknownFacts.has(b) ? "Not a fact that was sent" : "Show in explorer"}>{b}{unknownFacts.has(b) ? " ⚠" : ""}</button>
         {/each}
-      </p>
+      </details>
     </section>
   {/each}
 
   {#if r.output.periods.length}
-    <h2>Periods</h2>
+    <h2>Timeline: now and ahead</h2>
     <ul class="plain timeline">
       {#each r.output.periods as per, i (i)}
         <li>

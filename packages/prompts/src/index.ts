@@ -18,7 +18,7 @@ export interface PromptDef {
 }
 
 /** Current version per (system, topic). Bump when text changes; old versions stay reproducible in git. */
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 export const promptKey = (system: System, topic: Topic): string => `${system}-${topic}`;
 
@@ -63,6 +63,12 @@ export function outputJsonSchema(): Record<string, unknown> {
       } else if (STRICT_ALLOWED_KEYWORDS.has(k)) {
         out[k] = clean(v);
       }
+    }
+    // maxLength is not a strict-mode keyword; tell the model via description so it stays inside the zod limit.
+    const maxLength = (node as Record<string, unknown>).maxLength;
+    if (typeof maxLength === "number") {
+      const note = `At most ${maxLength} characters.`;
+      out.description = typeof out.description === "string" ? `${out.description} ${note}` : note;
     }
     if (out.type === "object") {
       out.additionalProperties = false;

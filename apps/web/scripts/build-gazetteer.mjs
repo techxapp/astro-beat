@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Build public/geo/cities.json from GeoNames cities15000 (CC BY 4.0).
-// Usage: node scripts/build-gazetteer.mjs path/to/cities15000.txt [path/to/admin1CodesASCII.txt]
+// Build public/geo/cities.json from GeoNames cities5000 (CC BY 4.0).
+// Usage: node scripts/build-gazetteer.mjs path/to/cities5000.txt [path/to/admin1CodesASCII.txt]
 // (download from https://download.geonames.org/export/dump/)
 import { readFileSync, writeFileSync } from "node:fs";
 
 const [citiesPath, adminPath] = process.argv.slice(2);
 if (!citiesPath) {
-  console.error("usage: build-gazetteer.mjs cities15000.txt [admin1CodesASCII.txt]");
+  console.error("usage: build-gazetteer.mjs cities5000.txt [admin1CodesASCII.txt]");
   process.exit(1);
 }
 const admin = new Map();
