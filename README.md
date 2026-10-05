@@ -1,9 +1,24 @@
 # Astro-Beat
 
-Privacy-first Vedic astrology (Parashari and KP) as an offline-capable web app. The chart and the
+Privacy-first astrology (Vedic Parashari and KP, and Western) and numerology as an offline-capable web app. The chart and the
 full deterministic analysis are computed in the browser. Only when you ask for a written reading
 is a small set of categorical facts for one topic sent, after you approve the exact bytes, through
 a stateless proxy to an LLM. That set has no degrees, no dates, no name and no place.
+
+Written readings come from one of five systems:
+
+| System | What is sent | Timing |
+|---|---|---|
+| **Parashari** (Vedic) | sidereal placements, lordships, aspects, yogas, vargas, SAV | Vimshottari MD/AD/PD with transits |
+| **KP** (Krishnamurti) | cusp and planet lords, significators A–D | Vimshottari periods of significators |
+| **Western** (tropical) | traditional dignities, Placidus houses (whole-sign near the poles), house rulers, Ptolemaic aspects, element/modality balance | yearly profections and their quarters, Jupiter/Saturn/node transits to natal points |
+| **Numerology** (Pythagorean) | Life Path, Birthday, Expression, Soul Urge, Personality, Maturity, karmic debt and lessons | pinnacles and challenges, personal years and months |
+| **Combined** | the topic's facts from the branches you pick (at least two), in one request | each branch's own periods |
+
+A combined reading comes back as one report whose centrepiece is a side-by-side table: one row per
+question (overall outlook, right now, coming months, best window, strengths, challenges, two
+topic-specific rows, what to focus on), one column per branch, and an "Overall" column with how far
+the branches agree and the balanced conclusion.
 
 Place search is offline by default (a bundled GeoNames `cities5000` index). If a town is missing,
 an explicit "Search online" button sends only the text you typed to the proxy's `POST /v1/geocode`,
@@ -17,11 +32,12 @@ source commit (footer, About screen, `GET /v1/meta`).
 
 | Path | What |
 |---|---|
-| `packages/schema` | zod v4 schemas: chart (local only), analysis (public) / `local` (period dates, maraka), payload v3, API, chart files, `identifying` (birth data) |
-| `packages/core` | Engine interface plus a pure-TS **reference engine** (see below): positions, ayanamsas, ascendant, Placidus, Vimshottari, ingress search |
-| `packages/analysis` | Pure TS `Chart → Analysis`: placements, dignity, five-fold relations, states, aspects, lordship and functional roles, 15 vargas, BAV/SAV, chara karakas, 20 yogas, labelled periods and transits, KP sub table, cusp and planet lords, significators A–D, KP periods |
-| `packages/payload` | `AnalysisPublic → PredictionPayload`: per-topic allowlists, renumbered fact ids and period labels, single serialization and a leak scanner |
-| `packages/prompts` | Versioned prompts per (system, topic) and the strict-mode output JSON schema |
+| `packages/schema` | zod v4 schemas: chart and Western chart (local only), analysis (public: Parashari, KP, Western, numerology) / `local` (period dates, maraka), payload v3 (one branch, or several `parts` for combined), API (with the comparison table), chart files, `identifying` (birth data) |
+| `packages/core` | Engine interface plus a pure-TS **reference engine** (see below): positions, ayanamsas, ascendant, Placidus, Vimshottari, ingress search, tropical (Western) view of a chart with transit samples |
+| `packages/analysis` | Pure TS `Chart → Analysis`: placements, dignity, five-fold relations, states, aspects, lordship and functional roles, 15 vargas, BAV/SAV, chara karakas, 20 yogas, labelled periods and transits, KP sub table, cusp and planet lords, significators A–D, KP periods; Western dignities, houses, rulers, aspects, profections and transit hits |
+| `packages/numerology` | Pure TS Pythagorean numerology from a plain birth date and name: core numbers, karmic debt and lessons, pinnacles and challenges, personal years and months |
+| `packages/payload` | `AnalysisPublic` (and numerology) `→ PredictionPayload`: per-topic allowlists, renumbered fact ids and period labels (numbered across branches in combined payloads), single serialization and a leak scanner |
+| `packages/prompts` | Versioned prompts per (system, topic), including the combined comparison contract, and the strict-mode output JSON schema |
 | `packages/chartfile` | Chart-only export (SHA-256 checksum) and encrypted profile export (PBKDF2 600k plus AES-256-GCM, header as AAD). Strict import with migrations and sanity checks |
 | `packages/fixtures` | Sentinel and golden inputs, the canary unit test, and the **inversion harness** (`pnpm inversion-report`) |
 | `apps/web` | Svelte 5 PWA: birth form (offline gazetteer with opt-in online place search, Intl historical offsets), chart worker, encrypted IndexedDB vault, explorer, files, topic picker, consent, results, history, settings |
@@ -70,7 +86,20 @@ risk below are in place; the prompt-injection eval, the ZDR status and a written
    classical combustion orbs, neecha-bhanga with the canceller in a kendra from the lagna or Moon,
    lower longitude winning a planetary war, Rahu exalted in Taurus, KP node rule on, KP conjunctions off.
    Every yoga carries a `definition`, `variant` and `sourceNote` for your review (Q5).
-9. **Model** `gpt-5.5` in `wrangler.toml` is a placeholder (Q8). Verify the Responses API
+9. **Western uses the seven traditional planets and the nodes.** The reference engine has no
+   Uranus, Neptune or Pluto; the prompt forbids inventing them. Natal Western positions are the
+   chart's sidereal ones plus the ayanamsa at the birth date (read from the start of the dasha tree),
+   so chart-only imports get Western readings too. Transit samples cover the current profection year
+   and the next six and are computed by the worker on each analysis, never stored.
+10. **Numerology runs on the device from the profile's birth date and name.** Only the reduced
+    numbers (≤ 33) are sent. It is unavailable for chart-only imports (no birth date); without a
+    name only the date-based numbers are used. Personal years follow the calendar year.
+11. **Combined readings disclose more in one request.** They carry several branches' facts at once
+    (35–46 KB measured for all four branches), with shorter Vedic windows (the current AD's PDs only)
+    and lower fact caps. The proxy gives them a larger output budget (16k tokens) and timeout (120 s).
+    The inversion harness models the Vedic payloads only; Western angles add little beyond what KP
+    already pins.
+12. **Model** `gpt-5.5` in `wrangler.toml` is a placeholder (Q8). Verify the Responses API
    request shape against current OpenAI docs before deploying (see `apps/proxy/src/openai.ts`).
 
 ### Measured residual risk (inversion harness; answers part of Q1)

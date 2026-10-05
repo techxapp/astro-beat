@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { analyze, YOGA_CATALOG } from "@astro/analysis";
-import { computeChartAt, DEFAULT_ENGINE_SETTINGS, isoDateFromJd } from "@astro/core";
+import { computeChartAt, DEFAULT_ENGINE_SETTINGS, isoDateFromJd, westernChart } from "@astro/core";
 import { YOGA_FAMILY } from "@astro/schema/analysis";
 import { TOPICS, type Topic } from "@astro/schema/enums";
-import { PredictionPayload } from "@astro/schema/payload";
+import type { AnalysisPublic } from "@astro/schema/analysis";
+import { PredictionPayload, type KpPayload, type ParashariPayload } from "@astro/schema/payload";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -11,8 +12,13 @@ import { buildPayload, KP_TOPIC_SPECS, PayloadLeakError, scanForLeaks, serialize
 
 const chartFor = (jdUt: number, lat = 28.61, lon = 77.21) => computeChartAt({ jdUt, lat, lon }, DEFAULT_ENGINE_SETTINGS, { ingressYears: 100 });
 const CHART = chartFor(2447693.1); // 1989-07-xx, Delhi
-const ANALYSIS = analyze(CHART, { asOf: "2026-09-29" });
+const ANALYSIS = analyze(CHART, { asOf: "2026-09-29", western: westernChart(CHART, { asOf: "2026-09-29" }) });
 const { localOnly, ...PUBLIC } = ANALYSIS;
+/** Vedic payloads (narrowed for the assertions below). */
+const vedic = (pub: AnalysisPublic, system: "parashari" | "kp", topic: Topic) => {
+  const built = buildPayload(pub, system, topic);
+  return { ...built, payload: built.payload as ParashariPayload | KpPayload };
+};
 
 
 describe("payload schema invariants (§5.3)", () => {
@@ -57,7 +63,7 @@ describe("buildPayload", () => {
   for (const system of ["parashari", "kp"] as const) {
     for (const topic of TOPICS) {
       it(`${system}/${topic} parses strictly and is renumbered`, () => {
-        const { payload, periodLabelMap, factIdMap } = buildPayload(PUBLIC, system, topic);
+        const { payload, periodLabelMap, factIdMap } = vedic(PUBLIC, system, topic);
         expect(() => PredictionPayload.parse(payload)).not.toThrow();
         payload.facts.forEach((f, i) => expect(f.id).toBe(`F${i + 1}`));
         payload.periods.forEach((p, i) => expect(p.label).toBe(`P${i + 1}`));
@@ -74,7 +80,7 @@ describe("buildPayload", () => {
 
   it("sends month-level periods for the current AD and the next two", () => {
     for (const system of ["parashari", "kp"] as const) {
-      const { payload } = buildPayload(PUBLIC, system, "marriage");
+      const { payload } = vedic(PUBLIC, system, "marriage");
       const ads = payload.periods.filter((p) => p.level === "AD");
       const curAd = ads.find((p) => p.status === "current")!;
       const parents = new Set(payload.periods.filter((p) => p.level === "PD").map((p) => p.lords.slice(0, 2).join("|")));
@@ -86,7 +92,7 @@ describe("buildPayload", () => {
 
   it("sends only the topic's vargas", () => {
     for (const topic of TOPICS) {
-      const { payload } = buildPayload(PUBLIC, "parashari", topic);
+      const { payload } = vedic(PUBLIC, "parashari", topic);
       const sent = new Set(payload.facts.flatMap((f) => (f.kind === "varga" || f.kind === "vargaLagna" ? [f.varga] : [])));
       for (const v of sent) expect(TOPIC_SPECS[topic].vargas).toContain(v);
       expect(sent.has("D60")).toBe(false);
@@ -95,7 +101,7 @@ describe("buildPayload", () => {
 
   it("sends only the topic's KP cusps and never sub-sub lords by default", () => {
     for (const topic of TOPICS) {
-      const { payload } = buildPayload(PUBLIC, "kp", topic);
+      const { payload } = vedic(PUBLIC, "kp", topic);
       for (const f of payload.facts) {
         if (f.kind === "kpCusp") expect(KP_TOPIC_SPECS[topic].cusps).toContain(f.cusp);
         if (f.kind === "kpSignificators") expect(KP_TOPIC_SPECS[topic].cusps).toContain(f.house);
@@ -105,9 +111,9 @@ describe("buildPayload", () => {
   });
 
   it("never mixes systems", () => {
-    const kp = buildPayload(PUBLIC, "kp", "career").payload;
+    const kp = vedic(PUBLIC, "kp", "career").payload;
     expect(kp.facts.every((f) => f.kind.startsWith("kp"))).toBe(true);
-    const par = buildPayload(PUBLIC, "parashari", "career").payload;
+    const par = vedic(PUBLIC, "parashari", "career").payload;
     expect(par.facts.some((f) => f.kind.startsWith("kp"))).toBe(false);
   });
 
@@ -119,7 +125,7 @@ describe("buildPayload", () => {
     const polar = analyze(chartFor(2447693.1, 75, 20), { asOf: "2026-09-29" });
     expect(polar.kp).toBeNull();
     const { localOnly: _l, ...pub } = polar;
-    expect(() => buildPayload(pub, "kp", "career")).toThrow(/Placidus/);
+    expect(() => vedic(pub, "kp", "career")).toThrow(/Placidus/);
   });
 });
 
@@ -127,7 +133,7 @@ describe("serialization and leak scan", () => {
   it("serializes once and contains no dates, degrees or long digit runs", () => {
     for (const topic of TOPICS) {
       for (const system of ["parashari", "kp"] as const) {
-        const { payload } = buildPayload(PUBLIC, system, topic);
+        const { payload } = vedic(PUBLIC, system, topic);
         const body = serializeRequest(payload, crypto.randomUUID());
         expect(scanForLeaks(body)).toEqual([]);
         // no chart longitude or dasha date appears in any encoding
@@ -146,7 +152,7 @@ describe("serialization and leak scan", () => {
     expect(scanForLeaks('"08:30"').map((f) => f.rule)).toContain("time-of-day");
   });
   it("refuses to serialize a body with a smuggled value", () => {
-    const { payload } = buildPayload(PUBLIC, "parashari", "career");
+    const { payload } = vedic(PUBLIC, "parashari", "career");
     // A payload that bypassed the builder cannot carry extra keys (strict parse) …
     expect(() => serializeRequest({ ...payload, note: "1990-06-15" } as never, crypto.randomUUID())).toThrow();
     expect(PayloadLeakError).toBeDefined();
@@ -165,7 +171,7 @@ describe("random analyses always yield valid payloads", () => {
         (jd, lat, lon, topic, system) => {
           const a = analyze(chartFor(jd, lat, lon), { asOf: isoDateFromJd(jd + 20 * 365) });
           const { localOnly: _l, ...pub } = a;
-          const { payload } = buildPayload(pub, system, topic);
+          const { payload } = vedic(pub, system, topic);
           const body = serializeRequest(payload, "00000000-0000-4000-8000-000000000000");
           expect(scanForLeaks(body)).toEqual([]);
           expect(body).not.toContain("localOnly");

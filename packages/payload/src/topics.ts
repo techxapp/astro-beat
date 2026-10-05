@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Per-topic allowlists. Only what a topic needs leaves the device (§5.2, §9).
-import type { CharaKaraka, Planet, Topic, Varga, YogaFamily } from "@astro/schema/enums";
+import type { CharaKaraka, Planet, Topic, Varga, WesternBody, YogaFamily } from "@astro/schema/enums";
 
 export interface PeriodWindow {
   /** ADs of the current MD: only the current and upcoming ones, or all of them */
@@ -76,3 +76,28 @@ export const KP_TOPIC_SPECS: Readonly<Record<Topic, KpTopicSpec>> = {
   children: { cusps: [2, 5, 11], includeSubSub: false, periodWindow: WINDOW },
   general: { cusps: ALL_HOUSES, includeSubSub: false, periodWindow: WINDOW },
 };
+
+export interface WesternTopicSpec {
+  /** houses (Placidus, or whole-sign at high latitudes) */
+  houses: number[];
+  /** natural significators */
+  bodies: WesternBody[];
+}
+
+/** Western house groups and significators per topic: common modern practice, pending review. */
+export const WESTERN_TOPIC_SPECS: Readonly<Record<Topic, WesternTopicSpec>> = {
+  career: { houses: [2, 6, 10], bodies: ["Sun", "Saturn", "Mars", "Jupiter", "Mercury"] },
+  marriage: { houses: [5, 7, 8], bodies: ["Venus", "Mars", "Moon", "Jupiter", "Sun"] },
+  finance: { houses: [2, 8, 11], bodies: ["Venus", "Jupiter", "Saturn", "Mercury"] },
+  health: { houses: [1, 6, 12], bodies: ["Sun", "Moon", "Mars", "Saturn"] },
+  education: { houses: [3, 9], bodies: ["Mercury", "Jupiter", "Moon"] },
+  children: { houses: [5, 11], bodies: ["Moon", "Jupiter", "Venus"] },
+  general: { houses: ALL_HOUSES, bodies: ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "NorthNode", "SouthNode"] },
+};
+
+/**
+ * A combined reading carries several branches in one request, so each Vedic branch sends only the
+ * current AD's month-level periods and fewer facts (the proxy body limit and the model's attention
+ * are shared).
+ */
+export const COMBINED_WINDOW: PeriodWindow = { currentMdAds: "remaining", nextMds: 1, pdAds: 1 };

@@ -1,6 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <script lang="ts">
   import type { StoredPrediction } from "@astro/schema/file";
+  import { SYSTEM_LABELS } from "../lib/render.ts";
   import { nav, predictions, profiles } from "../state/app.svelte.ts";
 
   function open(p: StoredPrediction): void {
@@ -24,7 +25,7 @@
   <ul class="plain">
     {#each profiles.active.predictions as p (p.id)}
       <li class="row">
-        <span>{p.createdAt} · {p.system === "kp" ? "KP" : "Parashari"} · {p.response.topic}</span>
+        <span>{p.createdAt} · {SYSTEM_LABELS[p.system]} · {p.response.topic}</span>
         <span class="small muted">{p.response.promptVersion}</span>
         <button onclick={() => open(p)}>Open</button>
         <button class="danger" onclick={() => remove(p.id)}>Delete</button>

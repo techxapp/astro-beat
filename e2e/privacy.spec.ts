@@ -16,7 +16,7 @@ test("full flow: nothing identifying leaves the page, the sent body equals the p
     await page.getByRole("tab", { name: tab }).click();
   }
 
-  for (const system of ["Parashari", "KP (Krishnamurti)"]) {
+  for (const system of ["Parashari", "KP (Krishnamurti)", "Western (tropical)", "Numerology (Pythagorean)", "Combined comparison"]) {
     await page.getByRole("button", { name: "Reading", exact: true }).click();
     await page.getByRole("button", { name: system }).click();
     await page.getByLabel("Career & work").check();
@@ -30,6 +30,12 @@ test("full flow: nothing identifying leaves the page, the sent body equals the p
     expect(sent?.body).toBe(preview);
     // Results render local dates for the period labels.
     await expect(page.getByText(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} – /).first()).toBeVisible();
+    if (system.startsWith("Combined")) {
+      await expect(page.getByRole("heading", { name: "Side-by-side comparison" })).toBeVisible();
+      for (const col of ["Parashari (Vedic)", "KP (Krishnamurti)", "Western (tropical)", "Numerology (Pythagorean)", "Overall"]) {
+        await expect(page.getByRole("columnheader", { name: col })).toBeVisible();
+      }
+    }
   }
 
   // Only our own origin and the proxy were contacted.

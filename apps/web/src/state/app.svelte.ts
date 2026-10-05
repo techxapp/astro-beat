@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Rune stores. `nav` is an in-memory view machine: no router, no URL parameters (nothing about
 // the chart ever lands in history or the address bar).
+import { ANALYSIS_VERSION } from "@astro/analysis";
 import { DEFAULT_ENGINE_SETTINGS } from "@astro/core";
 import { DEFAULT_CONVENTIONS, type AnalysisConventions } from "@astro/schema/analysis";
 import type { EngineSettings } from "@astro/schema/chart";
-import type { System, Topic } from "@astro/schema/enums";
+import { BRANCHES, type Branch, type System, type Topic } from "@astro/schema/enums";
 import type { StoredPrediction } from "@astro/schema/file";
+import type { PeriodDates } from "@astro/schema/local";
 import type { BirthInput } from "@astro/schema/identifying";
 import type { Analysis } from "@astro/schema/local";
 import { todayIso } from "../lib/dates.ts";
@@ -181,7 +183,7 @@ class ChartState {
   error = $state<string | null>(null);
 
   private cacheKey(p: ProfileRecord): string {
-    return JSON.stringify([p.chart.settings, settings.conventions, todayIso()]);
+    return JSON.stringify([ANALYSIS_VERSION, p.chart.settings, settings.conventions, todayIso()]);
   }
 
   async analyzeActive(): Promise<void> {
@@ -220,13 +222,17 @@ export interface PendingRequest {
   /** the exact serialized request body shown in consent and sent */
   body: string;
   hash: string;
-  periodLabelMap: Record<string, string>;
+  /** payload period label → local dates (resolved when the request is prepared) */
+  periodDates: PeriodDates;
+  /** payload fact id → analysis fact id (chart-analysis facts only) */
   factIdMap: Record<string, string>;
 }
 
 class Predictions {
   system = $state<System>("parashari");
   topic = $state<Topic>("career");
+  /** branches compared in a combined reading */
+  branches = $state<Branch[]>([...BRANCHES]);
   pending = $state<PendingRequest | null>(null);
   current = $state<StoredPrediction | null>(null);
   sending = $state(false);

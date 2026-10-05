@@ -3,7 +3,9 @@
 /// <reference lib="webworker" />
 import "../lib/zod-config.ts";
 import { analyze, kpLordsAt } from "@astro/analysis";
-import { momentFromBirth, ReferenceEngine } from "@astro/core";
+import { momentFromBirth, ReferenceEngine, westernChart } from "@astro/core";
+import type { AnalysisConventions } from "@astro/schema/analysis";
+import type { Chart } from "@astro/schema/chart";
 import type { CuspSensitivity, Envelope, WorkerRequest, WorkerResponse } from "./protocol.ts";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -30,14 +32,18 @@ function sensitivity(req: Extract<WorkerRequest, { type: "sensitivity" }>): Cusp
   return out;
 }
 
+/** Vedic analyses plus the Western one, from the tropical view of the same chart. */
+const analyzeChart = (chart: Chart, asOf: string, conventions: AnalysisConventions) =>
+  analyze(chart, { asOf, conventions, western: westernChart(chart, { asOf }) });
+
 function handle(req: WorkerRequest): WorkerResponse {
   switch (req.type) {
     case "compute": {
       const { chart, temporal } = ReferenceEngine.computeChart(req.birth, req.settings);
-      return { type: "compute", chart, temporal, analysis: analyze(chart, { asOf: req.asOf, conventions: req.conventions }) };
+      return { type: "compute", chart, temporal, analysis: analyzeChart(chart, req.asOf, req.conventions) };
     }
     case "analyze":
-      return { type: "analyze", analysis: analyze(req.chart, { asOf: req.asOf, conventions: req.conventions }) };
+      return { type: "analyze", analysis: analyzeChart(req.chart, req.asOf, req.conventions) };
     case "sensitivity":
       return { type: "sensitivity", cusps: sensitivity(req) };
   }

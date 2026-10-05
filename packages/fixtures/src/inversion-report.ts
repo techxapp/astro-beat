@@ -7,7 +7,7 @@ import { buildPayload } from "@astro/payload";
 import { TOPICS } from "@astro/schema/enums";
 import { readFileSync, writeFileSync } from "node:fs";
 import { GOLDEN } from "./index.ts";
-import { invertPayload, type InversionResult } from "./inversion.ts";
+import { invertPayload, type InversionResult, type InvertiblePayload } from "./inversion.ts";
 
 const args = process.argv.slice(2);
 const check = args.includes("--check");
@@ -31,7 +31,7 @@ for (const g of charts) {
   for (const system of ["parashari", "kp"] as const) {
     for (const topic of TOPICS) {
       const { payload } = buildPayload(pub, system, topic);
-      rows.push({ chart: g.id, ...invertPayload(payload) });
+      rows.push({ chart: g.id, ...invertPayload(payload as InvertiblePayload) });
     }
   }
 }

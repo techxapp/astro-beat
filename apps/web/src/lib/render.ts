@@ -1,8 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Human-readable renderings. Everything is plain text rendered through Svelte's escaping
 // (no {@html} anywhere in the app).
-import type { Fact, KpFact, PeriodFact, TransitEvent } from "@astro/schema/analysis";
+import type {
+  CoreNumber, Fact, KpFact, NumerologyFact, NumerologyPeriodFact, PeriodFact, TransitEvent, WesternFact, WesternPeriodFact,
+  WesternTransitHit, WesternTransitStay,
+} from "@astro/schema/analysis";
+import type { System, WesternPoint } from "@astro/schema/enums";
 import type { PeriodDates } from "@astro/schema/local";
+
+export const SYSTEM_LABELS: Readonly<Record<System, string>> = {
+  parashari: "Parashari", kp: "KP", western: "Western", numerology: "Numerology", combined: "Combined",
+};
+export const SYSTEM_TITLES: Readonly<Record<System, string>> = {
+  parashari: "Parashari (Vedic)", kp: "KP (Krishnamurti)", western: "Western (tropical)", numerology: "Numerology (Pythagorean)",
+  combined: "Combined comparison",
+};
+
+const POINT_NAMES: Partial<Record<WesternPoint, string>> = { NorthNode: "North Node", SouthNode: "South Node" };
+const point = (p: WesternPoint): string => POINT_NAMES[p] ?? p;
+const CORE_NAMES: Readonly<Record<CoreNumber, string>> = {
+  lifePath: "Life Path", birthday: "Birthday", expression: "Expression", soulUrge: "Soul Urge", personality: "Personality", maturity: "Maturity",
+};
 
 const ord = (n: number): string => {
   const s = ["th", "st", "nd", "rd"];
@@ -12,7 +30,9 @@ const ord = (n: number): string => {
 const list = (xs: readonly string[]): string => (xs.length === 0 ? "none" : xs.join(", "));
 const house = (h: number): string => `${ord(h)} house`;
 
-export function factSentence(f: Fact | KpFact): string {
+export type AnyFact = Fact | KpFact | WesternFact | NumerologyFact;
+
+export function factSentence(f: AnyFact): string {
   switch (f.kind) {
     case "placement": {
       const states = [
@@ -36,7 +56,22 @@ export function factSentence(f: Fact | KpFact): string {
     case "kpPlanet": return `${f.planet} in ${f.sign}, bhava ${f.bhava}${f.retrograde ? ", retrograde" : ""}: star lord ${f.starLord}, sub lord ${f.subLord}.`;
     case "kpSignificators": return `House ${f.house} significators: A ${list(f.a)}; B ${list(f.b)}; C ${list(f.c)}; D ${list(f.d)}.`;
     case "kpPlanetSignifies": return `${f.planet} signifies houses ${f.houses.join(", ") || "none"} (via star lord ${f.viaStarLord.join(", ") || "none"}; sub lord ${f.viaSubLord.join(", ") || "none"}).`;
+    case "wPlacement": return `${point(f.body)} in ${f.sign}, ${house(f.house)}${f.dignity === "none" ? "" : `; ${f.dignity}`}${f.retrograde ? "; retrograde" : ""}.`;
+    case "wAngle": return `${f.angle} in ${f.sign} (ruled by ${f.ruler}).`;
+    case "wHouseRuler": return `The ${house(f.house)} begins in ${f.cuspSign}; its ruler ${f.ruler} is in ${f.rulerSign}, ${house(f.rulerHouse)}.`;
+    case "wAspect": return `${point(f.a)} ${f.aspect} ${point(f.b)} (${f.closeness}).`;
+    case "wBalance": return `Elements: fire ${f.fire}, earth ${f.earth}, air ${f.air}, water ${f.water}; cardinal ${f.cardinal}, fixed ${f.fixed}, mutable ${f.mutable}.`;
+    case "numCore": return `${CORE_NAMES[f.number]} number ${f.value}${f.karmicDebt ? ` (karmic debt ${f.karmicDebt})` : ""}.`;
+    case "numKarmicLessons": return `Karmic lessons (digits missing from the name): ${f.missing.length ? f.missing.join(", ") : "none"}.`;
+    case "numHiddenPassion": return `Hidden passion: ${f.values.join(", ")}.`;
   }
+}
+
+export function westernStaySentence(t: WesternTransitStay): string {
+  return `${point(t.planet)} in ${t.sign} (${house(t.house)})`;
+}
+export function westernHitSentence(h: WesternTransitHit): string {
+  return `${point(h.planet)} ${h.aspect} natal ${point(h.to)}`;
 }
 
 export function transitSentence(t: TransitEvent): string {
@@ -44,8 +79,19 @@ export function transitSentence(t: TransitEvent): string {
   return `${t.planet} in ${t.sign} (${ord(t.houseFromLagna)} from lagna, ${ord(t.houseFromMoon)} from Moon${extra.length ? `; ${extra.join(", ")}` : ""})`;
 }
 
-export function periodName(p: Pick<PeriodFact, "lords" | "level">): string {
-  return `${p.lords.join("–")} ${p.level}`;
+type AnyPeriod = Pick<PeriodFact, "lords" | "level"> | Pick<WesternPeriodFact, "level" | "profection"> | Pick<NumerologyPeriodFact, "level" | "value" | "challenge">;
+
+export function periodName(p: AnyPeriod): string {
+  if ("lords" in p) return `${p.lords.join("–")} ${p.level}`;
+  if ("profection" in p) {
+    const y = `${ord(p.profection.house)}-house year (${p.profection.sign}, lord ${p.profection.lord})`;
+    return p.level === "year" ? `Profection: ${y}` : `Quarter of the ${y}`;
+  }
+  switch (p.level) {
+    case "pinnacle": return `Pinnacle ${p.value}${p.challenge === undefined ? "" : ` (challenge ${p.challenge})`}`;
+    case "personalYear": return `Personal year ${p.value}`;
+    case "personalMonth": return `Personal month ${p.value}`;
+  }
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

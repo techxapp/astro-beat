@@ -68,4 +68,4 @@ export const GOLDEN: readonly { id: string; birth: BirthInput }[] = (() => {
   return out;
 })();
 
-export { invertPayload, type InversionResult } from "./inversion.ts";
+export { invertPayload, type InversionResult, type InvertiblePayload } from "./inversion.ts";

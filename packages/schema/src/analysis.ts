@@ -4,7 +4,8 @@
 import { z } from "zod";
 import { EngineSettings } from "./chart.ts";
 import {
-  CharaKaraka, Dignity, FactId, HouseNum, Nakshatra, PeriodLabel, Planet, Sign, Varga, type YogaFamily,
+  CharaKaraka, Dignity, FactId, GRAHAS, HouseNum, KarmicDebt, Nakshatra, NumerologyValue, PeriodLabel, Planet, Sign, Varga,
+  WesternAspect, WesternBody, WesternDignity, WesternPoint, type YogaFamily,
 } from "./enums.ts";
 
 export { FactId, PeriodLabel };
@@ -173,6 +174,102 @@ export const DEFAULT_CONVENTIONS: AnalysisConventions = {
   kpNodeRule: true,
 };
 
+// ---------------------------------------------------------------- Western facts (system: "western")
+/** Traditional (seven-planet) rulers: sign and house rulerships. */
+export const WesternRuler = z.enum(GRAHAS);
+export type WesternRuler = z.infer<typeof WesternRuler>;
+const Closeness = z.enum(["tight", "moderate", "wide"]);
+const Count = z.int().min(0).max(12);
+
+const WPlacementFact = z.strictObject({
+  id: FactId, kind: z.literal("wPlacement"), body: WesternBody, sign: Sign, house: HouseNum, retrograde: z.boolean(), dignity: WesternDignity,
+});
+const WAngleFact = z.strictObject({ id: FactId, kind: z.literal("wAngle"), angle: z.enum(["Ascendant", "Midheaven"]), sign: Sign, ruler: WesternRuler });
+const WHouseRulerFact = z.strictObject({
+  id: FactId, kind: z.literal("wHouseRuler"), house: HouseNum, cuspSign: Sign, ruler: WesternRuler, rulerSign: Sign, rulerHouse: HouseNum,
+});
+const WAspectFact = z.strictObject({ id: FactId, kind: z.literal("wAspect"), a: WesternPoint, b: WesternPoint, aspect: WesternAspect, closeness: Closeness });
+/** Element and modality counts over the seven planets and the Ascendant. */
+const WBalanceFact = z.strictObject({
+  id: FactId, kind: z.literal("wBalance"),
+  fire: Count, earth: Count, air: Count, water: Count, cardinal: Count, fixed: Count, mutable: Count,
+});
+export const WesternFact = z.discriminatedUnion("kind", [WPlacementFact, WAngleFact, WHouseRulerFact, WAspectFact, WBalanceFact]);
+export type WesternFact = z.infer<typeof WesternFact>;
+export type WesternFactOf<K extends WesternFact["kind"]> = Extract<WesternFact, { kind: K }>;
+
+export const WesternTransitPlanet = z.enum(["Jupiter", "Saturn", "NorthNode"]);
+export type WesternTransitPlanet = z.infer<typeof WesternTransitPlanet>;
+/** A slow mover's sign and house during (part of) a period. */
+export const WesternTransitStay = z.strictObject({ planet: WesternTransitPlanet, sign: Sign, house: HouseNum });
+export type WesternTransitStay = z.infer<typeof WesternTransitStay>;
+/** A slow mover within 1° of an exact aspect to a natal point at some time in the period. */
+export const WesternTransitHit = z.strictObject({ planet: WesternTransitPlanet, aspect: WesternAspect, to: WesternPoint });
+export type WesternTransitHit = z.infer<typeof WesternTransitHit>;
+
+export const WesternPeriodFact = z.strictObject({
+  label: PeriodLabel,
+  /** profection years (birthday to birthday) and the quarters of the current and next one */
+  level: z.enum(["year", "quarter"]),
+  order: z.int().min(0),
+  status: z.enum(["past", "current", "upcoming"]),
+  /** annual profection: the house (whole-sign from the Ascendant) and sign of the year, and its ruler */
+  profection: z.strictObject({ house: HouseNum, sign: Sign, lord: WesternRuler }),
+  activatedHouses: z.array(HouseNum).max(12),
+  factRefs: z.array(FactId).max(40),
+  transits: z.array(WesternTransitStay).max(9),
+  aspects: z.array(WesternTransitHit).max(24),
+});
+export type WesternPeriodFact = z.infer<typeof WesternPeriodFact>;
+
+export const WesternAnalysis = z.strictObject({
+  zodiac: z.literal("tropical"),
+  houseSystem: z.enum(["placidus", "whole-sign"]),
+  ascendant: z.strictObject({ sign: Sign, ruler: WesternRuler }),
+  sun: z.strictObject({ sign: Sign }),
+  moon: z.strictObject({ sign: Sign }),
+  facts: z.array(WesternFact).max(400),
+  periods: z.array(WesternPeriodFact).max(200),
+});
+export type WesternAnalysis = z.infer<typeof WesternAnalysis>;
+
+// ---------------------------------------------------------------- numerology facts (system: "numerology")
+// Computed from the birth date and name by @astro/numerology; only the reduced numbers are public.
+export const CORE_NUMBERS = ["lifePath", "birthday", "expression", "soulUrge", "personality", "maturity"] as const;
+export const CoreNumber = z.enum(CORE_NUMBERS);
+export type CoreNumber = z.infer<typeof CoreNumber>;
+const Digit = z.int().min(1).max(9);
+
+const NumCoreFact = z.strictObject({
+  id: FactId, kind: z.literal("numCore"), number: CoreNumber, value: NumerologyValue, karmicDebt: KarmicDebt.optional(),
+});
+/** Digits missing from the name (karmic lessons). */
+const NumKarmicLessonsFact = z.strictObject({ id: FactId, kind: z.literal("numKarmicLessons"), missing: z.array(Digit).max(9) });
+/** The most frequent digit(s) in the name. */
+const NumHiddenPassionFact = z.strictObject({ id: FactId, kind: z.literal("numHiddenPassion"), values: z.array(Digit).min(1).max(9) });
+export const NumerologyFact = z.discriminatedUnion("kind", [NumCoreFact, NumKarmicLessonsFact, NumHiddenPassionFact]);
+export type NumerologyFact = z.infer<typeof NumerologyFact>;
+
+export const NumerologyPeriodFact = z.strictObject({
+  label: PeriodLabel,
+  level: z.enum(["pinnacle", "personalYear", "personalMonth"]),
+  order: z.int().min(0),
+  status: z.enum(["past", "current", "upcoming"]),
+  value: NumerologyValue,
+  /** challenge number of a pinnacle cycle */
+  challenge: z.int().min(0).max(8).optional(),
+});
+export type NumerologyPeriodFact = z.infer<typeof NumerologyPeriodFact>;
+
+export const NumerologyAnalysis = z.strictObject({
+  method: z.literal("pythagorean"),
+  /** false when no name was given: the name numbers are then absent */
+  nameUsed: z.boolean(),
+  facts: z.array(NumerologyFact).max(40),
+  periods: z.array(NumerologyPeriodFact).max(80),
+});
+export type NumerologyAnalysis = z.infer<typeof NumerologyAnalysis>;
+
 // ---------------------------------------------------------------- analysis
 const SystemAnalysisBase = {
   lagna: z.strictObject({ sign: Sign, lord: Planet }),
@@ -191,6 +288,8 @@ export const AnalysisPublic = z.strictObject({
   parashari: ParashariAnalysis,
   /** null if Placidus is unavailable for this latitude */
   kp: KpAnalysis.nullable(),
+  /** null when the worker supplied no tropical chart (e.g. analysis run without the engine) */
+  western: WesternAnalysis.nullable(),
 });
 export type AnalysisPublic = z.infer<typeof AnalysisPublic>;
 // The local-only half (period dates, maraka) lives in ./local.ts so that the payload

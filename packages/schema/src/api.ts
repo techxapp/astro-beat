@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { z } from "zod";
-import { FactId, PeriodLabel, System, Topic } from "./enums.ts";
+import { Branch, FactId, PeriodLabel, System, Topic } from "./enums.ts";
 import { PredictionPayload } from "./payload.ts";
 
 /** e.g. "career@1", "kp-marriage@2" */
@@ -31,6 +31,22 @@ export const PredictionOutput = z.strictObject({
     detail: z.string().max(300),
     confidence: z.enum(["tentative", "moderate", "stronger"]),
   })).max(10).default([]),
+  /**
+   * Combined readings only: one row per question, one view per branch, and how far they agree.
+   * Empty for single-branch readings.
+   */
+  comparison: z.array(z.strictObject({
+    aspect: z.string().max(60),
+    views: z.array(z.strictObject({
+      system: Branch,
+      view: z.string().max(300),
+      /** period labels (of any branch) the view's timing refers to */
+      periods: z.array(PeriodLabel).max(3),
+      basis: z.array(FactId).max(4),
+    })).max(4),
+    agreement: z.enum(["agree", "partly", "differ", "single"]),
+    synthesis: z.string().max(300),
+  })).max(12).default([]),
   periods: z.array(z.strictObject({
     period: PeriodLabel,
     headline: z.string().max(100),

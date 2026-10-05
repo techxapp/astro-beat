@@ -56,16 +56,26 @@ export async function captureAndStub(context: BrowserContext): Promise<Captured[
     if (url.pathname === "/v1/predict") {
       const req = JSON.parse(request.postData() ?? "{}");
       const payload = req.payload;
-      const firstPeriod = payload.periods[0]?.label ?? "P1";
+      const parts: { system: string; periods: { label: string }[]; facts: { id: string }[] }[] = payload.parts ?? [payload];
+      const firstPeriod = parts[0]?.periods[0]?.label ?? "P1";
+      // Combined readings get a one-row comparison with a view per branch.
+      const comparison = payload.system === "combined"
+        ? [{
+          aspect: "Right now",
+          views: parts.map((p) => ({ system: p.system, view: `Stub view, see ${p.periods[0]?.label ?? "P1"}.`, periods: p.periods.slice(0, 1).map((x) => x.label), basis: p.facts.slice(0, 1).map((f) => f.id) })),
+          agreement: "partly",
+          synthesis: "The branches partly agree.",
+        }]
+        : [];
       return route.fulfill({
         status: 200, headers: cors, contentType: "application/json",
         body: JSON.stringify({
-          requestId: req.requestId, system: payload.system, topic: payload.topic, promptVersion: `${payload.system}-${payload.topic}@2`, model: "stub",
+          requestId: req.requestId, system: payload.system, topic: payload.topic, promptVersion: `${payload.system}-${payload.topic}@3`, model: "stub",
           output: {
             summary: `A stubbed reading. ${firstPeriod} looks steady.`,
             themes: [{ title: "Stub theme", detail: "Grounded in F1.", tone: "mixed", basis: ["F1"] }],
             periods: [{ period: firstPeriod, headline: "Steady", detail: "A steady period.", confidence: "tentative", basis: ["F1"] }],
-            table: [], limitations: [], declined: [],
+            table: [], comparison, limitations: [], declined: [],
           },
           checks: { unknownFactIds: [], unknownPeriods: [], datesRedacted: 0 },
           usage: { inputTokens: 1, outputTokens: 1 },

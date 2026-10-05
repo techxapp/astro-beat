@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ascendant, calendarFromJd, DEFAULT_ENGINE_SETTINGS, deltaTSeconds, findIngresses, gmstDegrees, julianDay, lunarNode,
   meanObliquity, moonPosition, placidusCusps, planetPosition, ReferenceEngine, sunPosition, vimshottari, ayanamsa,
-  VIMSHOTTARI_ORDER, jdUtFromLocal,
+  VIMSHOTTARI_ORDER, jdUtFromLocal, westernChart, chartBirthDate, jdTtFromUt, tropicalLongitude,
 } from "../src/index.ts";
 
 const close = (actual: number, expected: number, tol: number): void => {
@@ -154,3 +154,26 @@ describe("engine", () => {
     expect(chart.kp.cusps).toBeNull();
   });
 });
+
+describe("western chart", () => {
+  const birth = { localDate: "1989-06-15", localTime: "12:00", timeAccuracy: "exact" as const, place: { label: "x", lat: 28.6, lon: 77.2 }, timezone: { iana: "Asia/Kolkata", utcOffsetMinutes: 330, overridden: false } };
+  const { chart, temporal } = ReferenceEngine.computeChart(birth, DEFAULT_ENGINE_SETTINGS, { ingressYears: 10 });
+  const w = westernChart(chart, { asOf: "2026-10-05" });
+  it("recovers the birth date from the dasha tree", () => {
+    expect(chartBirthDate(chart)).toBe(temporal.utcInstant.slice(0, 10));
+  });
+  it("natal positions equal the ephemeris' tropical ones (sidereal plus ayanamsa)", () => {
+    const tt = jdTtFromUt(temporal.jdUt);
+    for (const p of w.planets) {
+      const diff = Math.abs(((p.lon - tropicalLongitude(p.planet, tt, "mean") + 540) % 360) - 180);
+      expect(diff, p.planet).toBeLessThan(1e-3);
+    }
+    expect(w.cusps).not.toBeNull();
+    expect(w.midheavenLon).toBe(w.cusps![9]);
+  });
+  it("samples slow-mover transits around today", () => {
+    expect(w.transits[0]!.date <= "2025-10-01").toBe(true);
+    expect(w.transits.at(-1)!.date >= "2033-10-01").toBe(true);
+  });
+});
+

@@ -7,7 +7,10 @@ import { julianDay, ReferenceEngine, type AyanamsaId } from "@astro/core";
 import type { Fact, KpFact } from "@astro/schema/analysis";
 import type { PlanetPos } from "@astro/schema/chart";
 import { SIGNS, type Planet, type Varga } from "@astro/schema/enums";
-import type { PredictionPayload } from "@astro/schema/payload";
+import type { KpPayload, ParashariPayload } from "@astro/schema/payload";
+
+/** The harness models the Vedic payloads (the ones that carry birth-time-sensitive angles). */
+export type InvertiblePayload = ParashariPayload | KpPayload;
 
 export interface InversionOptions {
   fromYear: number;
@@ -27,8 +30,8 @@ export interface InversionOptions {
 export const DEFAULT_INVERSION: InversionOptions = { fromYear: 1900, toYear: 2030, stepMinutes: 10, lonStep: 1, latStep: 5, maxLat: 60, maxSlots: 30 };
 
 export interface InversionResult {
-  system: PredictionPayload["system"];
-  topic: PredictionPayload["topic"];
+  system: InvertiblePayload["system"];
+  topic: InvertiblePayload["topic"];
   /** distinct UT dates with at least one consistent time slot */
   candidateDays: number;
   /** consistent time slots (of stepMinutes) before location is considered */
@@ -56,7 +59,7 @@ interface Constraints {
   angles: AngleCheck[];
 }
 
-function parashariConstraints(p: Extract<PredictionPayload, { system: "parashari" }>, whatIf: InversionOptions["whatIf"] = {}): Constraints {
+function parashariConstraints(p: ParashariPayload, whatIf: InversionOptions["whatIf"] = {}): Constraints {
   const planets = new Map<Planet, PlanetCheck[]>();
   const coarse = new Map<Planet, (lon: number) => boolean>();
   const add = (pl: Planet, c: PlanetCheck): void => void planets.set(pl, [...(planets.get(pl) ?? []), c]);
@@ -80,7 +83,7 @@ function parashariConstraints(p: Extract<PredictionPayload, { system: "parashari
   return { ayanamsa: "lahiri", planets, coarse, angles };
 }
 
-function kpConstraints(p: Extract<PredictionPayload, { system: "kp" }>): Constraints {
+function kpConstraints(p: KpPayload): Constraints {
   const planets = new Map<Planet, PlanetCheck[]>();
   const coarse = new Map<Planet, (lon: number) => boolean>();
   const add = (pl: Planet, c: PlanetCheck): void => void planets.set(pl, [...(planets.get(pl) ?? []), c]);
@@ -128,7 +131,7 @@ function daily(ayanamsa: AyanamsaId, opts: InversionOptions): { jd0: number; lon
 
 const PLANET_INDEX: Record<Planet, number> = { Sun: 0, Moon: 1, Mars: 2, Mercury: 3, Jupiter: 4, Venus: 5, Saturn: 6, Rahu: 7, Ketu: 8 };
 
-export function invertPayload(payload: PredictionPayload, opts: InversionOptions = DEFAULT_INVERSION): InversionResult {
+export function invertPayload(payload: InvertiblePayload, opts: InversionOptions = DEFAULT_INVERSION): InversionResult {
   const c = payload.system === "kp" ? kpConstraints(payload) : parashariConstraints(payload, opts.whatIf);
   const { jd0, lons } = daily(c.ayanamsa, opts);
   const days = (lons[0] as Float64Array).length - 1;

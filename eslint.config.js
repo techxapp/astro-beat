@@ -67,6 +67,20 @@ export default tseslint.config(
       "no-restricted-globals": ["error", ...NETWORK_GLOBALS],
     },
   },
+  // numerology: pure TS over a plain date and name; it never sees charts or birth-data records, no I/O.
+  {
+    files: ["packages/numerology/src/**"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [
+          { name: "@astro/schema/identifying", message: "Numerology takes a plain date and name, not birth-data records." },
+          { name: "@astro/schema/chart", message: "Numerology does not use the chart." },
+        ],
+        patterns: [{ group: ["@astro/core", "@astro/core/*", "@astro/analysis", "@astro/payload", "@astro/chartfile"], message: "Numerology depends on @astro/schema only." }],
+      }],
+      "no-restricted-globals": ["error", ...NETWORK_GLOBALS],
+    },
+  },
   // proxy and prompts: payload + api schemas and prompts only.
   {
     files: ["apps/proxy/src/**", "packages/prompts/src/**"],

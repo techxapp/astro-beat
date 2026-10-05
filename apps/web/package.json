@@ -15,6 +15,7 @@
     "@astro/analysis": "workspace:*",
     "@astro/chartfile": "workspace:*",
     "@astro/core": "workspace:*",
+    "@astro/numerology": "workspace:*",
     "@astro/payload": "workspace:*",
     "@astro/schema": "workspace:*",
     "@photostructure/tz-lookup": "^11.7.0",

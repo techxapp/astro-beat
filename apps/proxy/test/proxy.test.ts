@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { analyze } from "@astro/analysis";
-import { computeChartAt, DEFAULT_ENGINE_SETTINGS } from "@astro/core";
-import { buildPayload, serializeRequest } from "@astro/payload";
+import { computeChartAt, DEFAULT_ENGINE_SETTINGS, westernChart } from "@astro/core";
+import { buildCombinedPayload, buildPayload, serializeRequest } from "@astro/payload";
 import { ErrorResponse, MetaResponse, PredictionResponse, type PredictionOutput } from "@astro/schema/api";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryCounterStore } from "../src/counters.ts";
@@ -16,7 +16,8 @@ const CONFIG: ProxyConfig = {
   dailyTokenBudget: 10_000, sourceUrl: "https://github.com/techxapp/astro-beat", commit: "abc123",
 };
 
-const analysis = analyze(computeChartAt({ jdUt: 2447693.1, lat: 28.6, lon: 77.2 }, DEFAULT_ENGINE_SETTINGS, { ingressYears: 100 }), { asOf: "2026-09-29" });
+const chart = computeChartAt({ jdUt: 2447693.1, lat: 28.6, lon: 77.2 }, DEFAULT_ENGINE_SETTINGS, { ingressYears: 100 });
+const analysis = analyze(chart, { asOf: "2026-09-29", western: westernChart(chart, { asOf: "2026-09-29" }) });
 const { localOnly: _l, ...PUBLIC } = analysis;
 const { payload } = buildPayload(PUBLIC, "parashari", "career");
 
@@ -25,6 +26,7 @@ const goodOutput = (over: Partial<PredictionOutput> = {}): PredictionOutput => (
   themes: [{ title: "Work", detail: "Tenth lord well placed.", tone: "supportive", basis: ["F1"] }],
   periods: [{ period: "P1", headline: "Building", detail: "A building phase.", confidence: "moderate", basis: ["F2"] }],
   table: [],
+  comparison: [],
   limitations: [],
   declined: [],
   ...over,
@@ -77,7 +79,8 @@ describe("meta and CORS", () => {
     const m = MetaResponse.parse(await r.json());
     expect(m.sourceUrl).toBe(CONFIG.sourceUrl);
     expect(m.commit).toBe("abc123");
-    expect(m.prompts).toContain("kp-marriage@2");
+    expect(m.prompts).toContain("kp-marriage@3");
+    expect(m.prompts).toContain("combined-general@3");
   });
   it("answers preflight only for the exact origin", async () => {
     const ok = await handler()(new Request("https://api.test/v1/predict", { method: "OPTIONS", headers: { origin: ORIGIN } }));
@@ -204,7 +207,7 @@ describe("predict: success and post-checks", () => {
     const r = await predict(h, body(), await session(h));
     expect(r.status).toBe(200);
     const res = PredictionResponse.parse(r.body);
-    expect(res.promptVersion).toBe("parashari-career@2");
+    expect(res.promptVersion).toBe("parashari-career@3");
     expect(res.system).toBe("parashari");
     expect(calls[0]!.instructions).toContain("Parashari");
     expect(calls[0]!.input.startsWith("CHART_FACTS")).toBe(true);
@@ -242,6 +245,39 @@ describe("predict: success and post-checks", () => {
     expect(res.checks.datesRedacted).toBe(1);
     expect(JSON.stringify(res.output.table)).not.toMatch(/2028/);
     expect(res.output.table).toHaveLength(2);
+  });
+  it("combined: uses the combined prompt and larger limits, and checks and cleans the comparison", async () => {
+    const h = handler();
+    const { payload: combined } = buildCombinedPayload({ analysis: PUBLIC, numerology: null }, ["parashari", "western"], "career");
+    if (combined.system !== "combined") throw new Error("expected a combined payload");
+    const westernLabel = combined.parts[1]!.periods[0]!.label;
+    const westernFact = combined.parts[1]!.facts[0]!.id;
+    modelImpl = async () => ({
+      text: JSON.stringify(goodOutput({
+        comparison: [{
+          aspect: "Right now",
+          views: [
+            { system: "parashari", view: "A building phase.", periods: ["P1"], basis: ["F1"] },
+            { system: "western", view: "Steady effort pays off by May 2027.", periods: [westernLabel, "P97"], basis: [westernFact, "F998"] },
+          ],
+          agreement: "agree",
+          synthesis: "Both point to steady growth in 2027.",
+        }],
+      })),
+      model: "m", inputTokens: 1, outputTokens: 1,
+    });
+    const r = await predict(h, serializeRequest(combined, crypto.randomUUID()), await session(h));
+    expect(r.status).toBe(200);
+    const res = PredictionResponse.parse(r.body);
+    expect(res.system).toBe("combined");
+    expect(res.promptVersion).toBe("combined-career@3");
+    expect(calls[0]!.instructions).toContain('Fill "comparison"');
+    expect(calls[0]!.maxOutputTokens).toBe(LIMITS.maxOutputTokensCombined);
+    expect(calls[0]!.timeoutMs).toBe(LIMITS.timeoutMsCombined);
+    expect(res.checks.unknownPeriods).toEqual(["P97"]);
+    expect(res.checks.unknownFactIds).toEqual(["F998"]);
+    expect(res.checks.datesRedacted).toBe(2);
+    expect(JSON.stringify(res.output.comparison)).not.toMatch(/2027/);
   });
   it("logs metadata only, never bodies", async () => {
     const h = handler();

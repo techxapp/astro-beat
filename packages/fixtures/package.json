@@ -15,6 +15,7 @@
   "dependencies": {
     "@astro/analysis": "workspace:*",
     "@astro/core": "workspace:*",
+    "@astro/numerology": "workspace:*",
     "@astro/payload": "workspace:*",
     "@astro/schema": "workspace:*"
   },

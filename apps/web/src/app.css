@@ -75,6 +75,11 @@ th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: lef
 th { color: var(--muted); font-weight: 600; }
 .chip { display: inline-block; background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-size: 0.8rem; margin: 2px; }
 button.chip { min-height: 0; }
+table.compare { min-width: 720px; }
+table.compare td, table.compare th[scope="row"] { min-width: 140px; }
+.chip.agree-agree { border-color: var(--good); color: var(--good); }
+.chip.agree-differ { border-color: var(--bad); color: var(--bad); }
+.chip.agree-partly { border-color: var(--warn-line); }
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 12px; }
 pre.body { white-space: pre-wrap; word-break: break-all; font-size: 0.78rem; max-height: 320px; overflow: auto; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--line); }
 ul.plain { list-style: none; padding: 0; margin: 0; }
