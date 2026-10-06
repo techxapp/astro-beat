@@ -67,3 +67,22 @@ export const Chart = z.strictObject({
 });
 export type Chart = z.infer<typeof Chart>;
 // Signs, nakshatras, vargas and houses are pure functions of longitude and are derived in analysis.
+
+/**
+ * Tropical (Western) positions derived from a Chart, plus transit samples around "today".
+ * Computed by the worker for each analysis and never stored or sent.
+ */
+export const WesternChart = z.strictObject({
+  /** UT birth date (the first dasha period starts at birth); profection years start on its anniversaries */
+  birthDate: IsoDate,
+  ascendantLon: Lon,
+  /** null when Placidus is undefined (|lat| ≳ 66°) */
+  midheavenLon: Lon.nullable(),
+  /** tropical Placidus cusps 1..12; null when undefined (whole-sign houses are used instead) */
+  cusps: z.array(Lon).length(12).nullable(),
+  /** tropical positions; Rahu is the North Node and Ketu the South Node */
+  planets: z.array(PlanetPos).length(9),
+  /** tropical longitudes of the slow movers, sampled at a fixed step */
+  transits: z.array(z.strictObject({ date: IsoDate, Jupiter: Lon, Saturn: Lon, NorthNode: Lon })).max(3000),
+});
+export type WesternChart = z.infer<typeof WesternChart>;

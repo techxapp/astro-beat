@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Output post-checks: grounding (fact ids, period labels) and date/age redaction.
 import type { PredictionOutput } from "@astro/schema/api";
-import type { PredictionPayload } from "@astro/schema/payload";
+import { payloadFactIds, payloadPeriodLabels, type PredictionPayload } from "@astro/schema/payload";
 
 const MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec";
 const DATE_PATTERNS: readonly RegExp[] = [
@@ -37,8 +37,8 @@ export interface CheckedOutput {
 }
 
 export function postCheck(output: PredictionOutput, payload: PredictionPayload): CheckedOutput {
-  const factIds = new Set(payload.facts.map((f) => f.id));
-  const periods = new Set(payload.periods.map((p) => p.label));
+  const factIds = payloadFactIds(payload);
+  const periods = payloadPeriodLabels(payload);
   const unknownFactIds = new Set<string>();
   const unknownPeriods = new Set<string>();
   for (const t of output.themes) for (const b of t.basis) if (!factIds.has(b)) unknownFactIds.add(b);
@@ -47,6 +47,12 @@ export function postCheck(output: PredictionOutput, payload: PredictionPayload):
     for (const b of p.basis) if (!factIds.has(b)) unknownFactIds.add(b);
   }
   for (const row of output.table) for (const p of row.periods) if (!periods.has(p)) unknownPeriods.add(p);
+  for (const row of output.comparison) {
+    for (const v of row.views) {
+      for (const p of v.periods) if (!periods.has(p)) unknownPeriods.add(p);
+      for (const b of v.basis) if (!factIds.has(b)) unknownFactIds.add(b);
+    }
+  }
   let datesRedacted = 0;
   // Redaction can lengthen a string, so clamp back to the schema's limits.
   const r = (s: string, max: number): string => {
@@ -58,6 +64,12 @@ export function postCheck(output: PredictionOutput, payload: PredictionPayload):
     summary: r(output.summary, 1200),
     themes: output.themes.map((t) => ({ ...t, title: r(t.title, 80), detail: r(t.detail, 800) })),
     table: output.table.map((row) => ({ ...row, label: r(row.label, 60), detail: r(row.detail, 300) })),
+    comparison: output.comparison.map((row) => ({
+      ...row,
+      aspect: r(row.aspect, 60),
+      views: row.views.map((v) => ({ ...v, view: r(v.view, 300) })),
+      synthesis: r(row.synthesis, 300),
+    })),
     periods: output.periods.map((p) => ({ ...p, headline: r(p.headline, 100), detail: r(p.detail, 600) })),
     limitations: output.limitations.map((l) => r(l, 200)),
     declined: output.declined,

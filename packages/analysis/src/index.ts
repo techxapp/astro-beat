@@ -19,3 +19,7 @@ export {
 } from "./kp/index.ts";
 export * from "./tables.ts";
 export { subPeriodsOf } from "./subperiods.ts";
+export {
+  analyzeWestern, westernDignity, westernHouse, aspectBetween, addMonths, ASPECT_ANGLE, NATAL_ORB, TRANSIT_ORB, PROFECTION_YEARS,
+  QUARTER_YEARS, type WesternResult,
+} from "./western.ts";

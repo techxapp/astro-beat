@@ -2,14 +2,17 @@
 <script lang="ts">
   import { PredictionRequest } from "@astro/schema/api";
   import type { StoredPrediction } from "@astro/schema/file";
+  import { payloadParts } from "@astro/schema/payload";
+  import PayloadPartView from "../components/PayloadPartView.svelte";
   import { API_ORIGIN, ApiError, sendPrediction } from "../net/api.ts";
-  import { factSentence, periodName, transitSentence } from "../lib/render.ts";
-  import { chart, nav, predictions, profiles, todayIso } from "../state/app.svelte.ts";
+  import { SYSTEM_TITLES } from "../lib/render.ts";
+  import { nav, predictions, profiles, todayIso } from "../state/app.svelte.ts";
 
   const p = $derived(predictions.pending);
   // The readable view is built from the very string that will be sent.
   const req = $derived(p ? PredictionRequest.parse(JSON.parse(p.body)) : null);
   const bytes = $derived(p ? new TextEncoder().encode(p.body).byteLength : 0);
+  const parts = $derived(req ? payloadParts(req.payload) : []);
 
   const ERRORS: Record<string, string> = {
     rate_limited: "Too many requests right now. Please wait a little and try again.",
@@ -21,19 +24,13 @@
   };
 
   async function approve(): Promise<void> {
-    if (!p || !profiles.active || !chart.analysis) return;
+    if (!p || !profiles.active) return;
     predictions.sending = true;
     predictions.error = null;
     try {
       const response = await sendPrediction(p.body, p.hash);
-      const dates = chart.analysis.localOnly.periodDates;
-      const periodDates: StoredPrediction["periodDates"] = {};
-      for (const [payloadLabel, analysisLabel] of Object.entries(p.periodLabelMap)) {
-        const d = dates[analysisLabel];
-        if (d) periodDates[payloadLabel] = d;
-      }
       const stored: StoredPrediction = {
-        id: crypto.randomUUID(), system: p.system, createdAt: todayIso(), response, periodDates, factIdMap: p.factIdMap,
+        id: crypto.randomUUID(), system: p.system, createdAt: todayIso(), response, periodDates: p.periodDates, factIdMap: p.factIdMap,
       };
       const rec = $state.snapshot(profiles.active);
       rec.predictions = [stored, ...rec.predictions].slice(0, 200);
@@ -62,36 +59,25 @@
   <section class="card">
     <p>
       This exact text ({bytes.toLocaleString()} bytes) will be sent to <code>{API_ORIGIN}</code>, then to OpenAI to write
-      a <strong>{req.payload.system === "kp" ? "KP" : "Parashari"}</strong> reading about <strong>{req.payload.topic}</strong>.
+      a <strong>{SYSTEM_TITLES[req.payload.system]}</strong> reading about <strong>{req.payload.topic}</strong>.
     </p>
     <ul class="small">
       <li class="ok">✓ Not included: name, birth date, birth time, birth place, coordinates, time zone, notes</li>
       <li class="ok">✓ Not included: planet degrees, calendar dates, today's date</li>
       <li class="ok">✓ Not included: facts about other topics</li>
+      {#if parts.some((x) => x.system === "numerology")}
+        <li class="ok">✓ Numerology: only the reduced numbers are sent; the birth date and the name stay on this device</li>
+      {/if}
     </ul>
     <p class="small muted">Fingerprint (SHA-256): <code>{p.hash.slice(0, 16)}…</code> The app refuses to send anything that differs from this preview.</p>
   </section>
 
   <section class="card">
     <h2>What the facts say</h2>
-    <p class="small">Lagna {req.payload.lagna.sign} (lord {req.payload.lagna.lord}); Moon in {req.payload.moon.sign}, {req.payload.moon.nakshatra} pada {req.payload.moon.pada}; {req.payload.ayanamsa} ayanamsa, {req.payload.nodeType} nodes.</p>
-    <details open>
-      <summary>{req.payload.facts.length} chart facts</summary>
-      <ul class="plain small">
-        {#each req.payload.facts as f (f.id)}<li><span class="chip">{f.id}</span> {factSentence(f)}</li>{/each}
-      </ul>
-    </details>
-    <details>
-      <summary>{req.payload.periods.length} periods (as labels, without dates)</summary>
-      <ul class="plain small">
-        {#each req.payload.periods as per (per.label)}
-          <li>
-            <span class="chip">{per.label}</span> {periodName(per)} · {per.status} · activates houses {per.activatedHouses.join(", ") || "–"}
-            {#if per.transits.length}<div class="muted">{per.transits.map(transitSentence).join("; ")}</div>{/if}
-          </li>
-        {/each}
-      </ul>
-    </details>
+    {#each parts as part (part.system)}
+      {#if parts.length > 1}<h3>{SYSTEM_TITLES[part.system]}</h3>{/if}
+      <PayloadPartView {part} />
+    {/each}
     <details>
       <summary>Exact JSON</summary>
       <pre class="body">{p.body}</pre>

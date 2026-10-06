@@ -39,8 +39,18 @@ export const TOPICS = ["career", "marriage", "finance", "health", "education", "
 export const Topic = z.enum(TOPICS);
 export type Topic = z.infer<typeof Topic>;
 
-export const System = z.enum(["parashari", "kp"]);
+/** The branches a reading can come from. */
+export const BRANCHES = ["parashari", "kp", "western", "numerology"] as const;
+export const Branch = z.enum(BRANCHES);
+export type Branch = z.infer<typeof Branch>;
+
+/** A reading's system: one branch, or "combined" (several branches compared side by side). */
+export const SYSTEMS = [...BRANCHES, "combined"] as const;
+export const System = z.enum(SYSTEMS);
 export type System = z.infer<typeof System>;
+
+/** Systems whose payload is built from the chart analysis alone (numerology needs the birth date). */
+export type ChartSystem = "parashari" | "kp" | "western";
 
 export const HouseNum = z.int().min(1).max(12);
 export type HouseNum = number;
@@ -63,3 +73,28 @@ export const FactId = z.string().regex(/^F\d{1,4}$/);
 export type FactId = string;
 export const PeriodLabel = z.string().regex(/^P\d{1,4}$/);
 export type PeriodLabel = string;
+
+// ---------------------------------------------------------------- Western (tropical) astrology
+/** Bodies of the reference engine in Western naming. Outer planets need the Swiss Ephemeris adapter. */
+export const WESTERN_BODIES = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "NorthNode", "SouthNode"] as const;
+export const WesternBody = z.enum(WESTERN_BODIES);
+export type WesternBody = z.infer<typeof WesternBody>;
+
+export const WESTERN_POINTS = [...WESTERN_BODIES, "Ascendant", "Midheaven"] as const;
+export const WesternPoint = z.enum(WESTERN_POINTS);
+export type WesternPoint = z.infer<typeof WesternPoint>;
+
+export const WESTERN_ASPECTS = ["conjunction", "sextile", "square", "trine", "opposition"] as const;
+export const WesternAspect = z.enum(WESTERN_ASPECTS);
+export type WesternAspect = z.infer<typeof WesternAspect>;
+
+/** Essential dignity by sign (traditional rulerships). Nodes have none. */
+export const WesternDignity = z.enum(["domicile", "exaltation", "detriment", "fall", "peregrine", "none"]);
+export type WesternDignity = z.infer<typeof WesternDignity>;
+
+// ---------------------------------------------------------------- numerology (Pythagorean)
+/** Reduced numerology values: 0..9 plus the master numbers 11, 22 and 33. */
+export const NumerologyValue = z.union([z.int().min(0).max(9), z.literal(11), z.literal(22), z.literal(33)]);
+export type NumerologyValue = z.infer<typeof NumerologyValue>;
+export const KarmicDebt = z.union([z.literal(13), z.literal(14), z.literal(16), z.literal(19)]);
+export type KarmicDebt = z.infer<typeof KarmicDebt>;

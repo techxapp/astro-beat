@@ -29,7 +29,10 @@ export const LIMITS = {
   perDayPerSession: 20,
   sessionsPerHourPerIp: 10,
   maxOutputTokens: 8000, // includes hidden reasoning tokens; 1500 starved a reasoning model into an empty response
+  /** combined readings write a comparison table on top of the usual reading */
+  maxOutputTokensCombined: 16000,
   timeoutMs: 60_000,
+  timeoutMsCombined: 120_000,
   geocodeMaxBodyBytes: 512,
   geocodePerMinutePerIp: 20,
   geocodePerDayPerSession: 200,
@@ -237,10 +240,12 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
 
       // 7. Model
       let result;
+      const combined = payload.system === "combined";
       try {
         result = await model({
           model: cfg.model, instructions: prompt.instructions, input: userMessage(payload), schema: outputSchema,
-          maxOutputTokens: LIMITS.maxOutputTokens, timeoutMs: LIMITS.timeoutMs,
+          maxOutputTokens: combined ? LIMITS.maxOutputTokensCombined : LIMITS.maxOutputTokens,
+          timeoutMs: combined ? LIMITS.timeoutMsCombined : LIMITS.timeoutMs,
         });
       } catch (e) {
         if (e instanceof UpstreamError && e.kind === "timeout") throw new HttpError(504, "upstream_timeout");

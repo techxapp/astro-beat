@@ -1,5 +1,5 @@
 {
-  "name": "@astro/payload",
+  "name": "@astro/numerology",
   "version": "0.1.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
@@ -15,12 +15,7 @@
     "@astro/schema": "workspace:*"
   },
   "devDependencies": {
-    "@astro/analysis": "workspace:*",
-    "@astro/core": "workspace:*",
-    "@astro/numerology": "workspace:*",
-    "fast-check": "^4.10.0",
     "typescript": "~5.9.3",
-    "vitest": "^5.0.2",
-    "zod": "^4.6.5"
+    "vitest": "^5.0.2"
   }
 }

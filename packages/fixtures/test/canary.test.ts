@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Canary unit test (M6): sentinel births through the full local pipeline; the serialized request
-// for every system × topic must contain no trace of the birth data in any encoding.
+// for every system (including Western, numerology and combined) × topic must contain no trace of the
+// birth data in any encoding.
 import { analyze } from "@astro/analysis";
-import { DEFAULT_ENGINE_SETTINGS, ReferenceEngine } from "@astro/core";
-import { buildPayload, scanForLeaks, serializeRequest } from "@astro/payload";
-import { TOPICS } from "@astro/schema/enums";
+import { DEFAULT_ENGINE_SETTINGS, ReferenceEngine, westernChart } from "@astro/core";
+import { numerology } from "@astro/numerology";
+import { buildCombinedPayload, buildNumerologyPayload, buildPayload, scanForLeaks, serializeRequest } from "@astro/payload";
+import { BRANCHES, TOPICS } from "@astro/schema/enums";
+import type { PredictionPayload } from "@astro/schema/payload";
 import { describe, expect, it } from "vitest";
 import { SENTINELS } from "../src/index.ts";
 
@@ -27,23 +30,32 @@ describe("canary: nothing identifying reaches the request body", () => {
   for (const b of SENTINELS) {
     it(`${b.name}`, () => {
       const { chart, temporal } = ReferenceEngine.computeChart(b, DEFAULT_ENGINE_SETTINGS, { ingressYears: 100 });
-      const { localOnly, ...pub } = analyze(chart, { asOf: "2026-09-29" });
+      const asOf = "2026-09-29";
+      const western = westernChart(chart, { asOf });
+      const { localOnly, ...pub } = analyze(chart, { asOf, western });
+      const num = numerology({ birthDate: b.localDate, name: b.name }, { asOf });
       const chartText = {
-        lons: [...chart.parashari.planets, ...chart.kp.planets].map((p) => p.lon).concat(chart.parashari.ascendantLon, ...(chart.kp.cusps ?? [])),
-        dates: Object.values(localOnly.periodDates).flatMap((d) => [d.start, d.end]).slice(0, 400),
+        lons: [...chart.parashari.planets, ...chart.kp.planets, ...western.planets].map((p) => p.lon)
+          .concat(chart.parashari.ascendantLon, ...(chart.kp.cusps ?? []), western.ascendantLon, ...(western.cusps ?? [])),
+        dates: [...Object.values(localOnly.periodDates), ...Object.values(num.periodDates)].flatMap((d) => [d.start, d.end]).slice(0, 600),
       };
       const ns = needles(b, temporal.jdUt, chartText);
-      let checked = 0;
-      for (const system of ["parashari", "kp"] as const) {
-        if (system === "kp" && !pub.kp) continue;
-        for (const topic of TOPICS) {
-          const body = serializeRequest(buildPayload(pub, system, topic).payload, "00000000-0000-4000-8000-000000000000");
-          expect(scanForLeaks(body)).toEqual([]);
-          for (const n of ns) expect(body, `leaked ${n}`).not.toContain(n);
-          checked++;
+      const payloads: PredictionPayload[] = [];
+      for (const topic of TOPICS) {
+        for (const system of ["parashari", "kp", "western"] as const) {
+          if (system === "kp" && !pub.kp) continue;
+          payloads.push(buildPayload(pub, system, topic).payload);
         }
+        payloads.push(buildNumerologyPayload(num.analysis, topic).payload);
+        const branches = BRANCHES.filter((x) => x !== "kp" || pub.kp);
+        payloads.push(buildCombinedPayload({ analysis: pub, numerology: num.analysis }, branches, topic).payload);
       }
-      expect(checked).toBeGreaterThanOrEqual(7);
+      for (const payload of payloads) {
+        const body = serializeRequest(payload, "00000000-0000-4000-8000-000000000000");
+        expect(scanForLeaks(body)).toEqual([]);
+        for (const n of ns) expect(body, `leaked ${n} (${payload.system}/${payload.topic})`).not.toContain(n);
+      }
+      expect(payloads.length).toBeGreaterThanOrEqual(28);
     }, 60_000);
   }
 });

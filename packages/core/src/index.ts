@@ -4,5 +4,6 @@ export { vimshottari, sequenceFrom, nakshatraLordOf, VIMSHOTTARI_ORDER, VIMSHOTT
 export { findIngresses } from "./ingress.ts";
 export { ayanamsa, UnsupportedAyanamsaError, type AyanamsaId } from "./sidereal.ts";
 export { julianDay, calendarFromJd, isoDateFromJd, isoInstantFromJd, jdFromIsoDate, jdUtFromLocal, jdTtFromUt, deltaTSeconds } from "./time.ts";
+export { westernChart, chartBirthDate, type WesternOptions } from "./western.ts";
 export { placidusCusps, ascendant, midheaven } from "./houses.ts";
 export { sunPosition, moonPosition, planetPosition, lunarNode, tropicalLongitude, gmstDegrees, meanObliquity } from "./ephemeris.ts";

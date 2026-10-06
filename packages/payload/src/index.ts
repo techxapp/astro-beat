@@ -3,8 +3,14 @@ import { PredictionRequest } from "@astro/schema/api";
 import type { PredictionPayload } from "@astro/schema/payload";
 import { scanForLeaks } from "./leaks.ts";
 
-export { buildPayload, selectPeriods, PayloadUnavailableError, MAX_FACTS, MAX_PERIODS, type BuiltPayload } from "./build.ts";
-export { TOPIC_SPECS, KP_TOPIC_SPECS, type TopicSpec, type KpTopicSpec, type PeriodWindow } from "./topics.ts";
+export {
+  buildPayload, buildNumerologyPayload, buildCombinedPayload, availableBranches, selectPeriods, PayloadUnavailableError, MAX_FACTS,
+  COMBINED_MAX_FACTS, MAX_PERIODS, MAX_WESTERN_PERIODS, type BuiltPayload, type Origin, type ReadingSources,
+} from "./build.ts";
+export {
+  TOPIC_SPECS, KP_TOPIC_SPECS, WESTERN_TOPIC_SPECS, COMBINED_WINDOW, type TopicSpec, type KpTopicSpec, type WesternTopicSpec,
+  type PeriodWindow,
+} from "./topics.ts";
 export { scanForLeaks, type LeakFinding } from "./leaks.ts";
 
 export class PayloadLeakError extends Error {

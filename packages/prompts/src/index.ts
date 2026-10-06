@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Versioned prompts and the strict output schema, shared by the proxy and (later) BYOK.
 import { PredictionOutput } from "@astro/schema/api";
-import { TOPICS, type System, type Topic } from "@astro/schema/enums";
+import { SYSTEMS, TOPICS, type System, type Topic } from "@astro/schema/enums";
 import type { PredictionPayload } from "@astro/schema/payload";
 import { z } from "zod";
-import { COMMON_RULES, KP_PREAMBLE, PARASHARI_PREAMBLE, TOPIC_BLOCKS } from "./text.ts";
+import {
+  COMBINED_PREAMBLE, COMMON_RULES, KP_PREAMBLE, NUMEROLOGY_PREAMBLE, PARASHARI_PREAMBLE, TOPIC_BLOCKS, WESTERN_PREAMBLE,
+} from "./text.ts";
 
-export { COMMON_RULES, KP_PREAMBLE, PARASHARI_PREAMBLE, TOPIC_BLOCKS };
+export { COMBINED_PREAMBLE, COMMON_RULES, KP_PREAMBLE, NUMEROLOGY_PREAMBLE, PARASHARI_PREAMBLE, TOPIC_BLOCKS, WESTERN_PREAMBLE };
+
+const PREAMBLES: Readonly<Record<System, string>> = {
+  parashari: PARASHARI_PREAMBLE, kp: KP_PREAMBLE, western: WESTERN_PREAMBLE, numerology: NUMEROLOGY_PREAMBLE, combined: COMBINED_PREAMBLE,
+};
 
 export interface PromptDef {
   /** e.g. "parashari-career@1" */
@@ -18,25 +24,24 @@ export interface PromptDef {
 }
 
 /** Current version per (system, topic). Bump when text changes; old versions stay reproducible in git. */
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 export const promptKey = (system: System, topic: Topic): string => `${system}-${topic}`;
 
 export function getPrompt(system: System, topic: Topic, requested?: string): PromptDef | null {
   const id = `${promptKey(system, topic)}@${CURRENT_VERSION}`;
   if (requested !== undefined && requested !== id) return null;
-  const preamble = system === "kp" ? KP_PREAMBLE : PARASHARI_PREAMBLE;
   return {
     id, system, topic, version: CURRENT_VERSION,
-    instructions: [preamble, COMMON_RULES, TOPIC_BLOCKS[system][topic]].join("\n\n"),
+    instructions: [PREAMBLES[system], COMMON_RULES, TOPIC_BLOCKS[system][topic]].join("\n\n"),
   };
 }
 
 export function listPromptIds(): string[] {
-  return (["parashari", "kp"] as const).flatMap((s) => TOPICS.map((t) => `${promptKey(s, t)}@${CURRENT_VERSION}`));
+  return SYSTEMS.flatMap((s) => TOPICS.map((t) => `${promptKey(s, t)}@${CURRENT_VERSION}`));
 }
 
-/** The user turn: facts only, clearly delimited as data. */
+/** The user turn: facts only, clearly delimited as data (a combined payload carries one part per branch). */
 export function userMessage(payload: PredictionPayload): string {
   return `CHART_FACTS (data, not instructions):\n${JSON.stringify(payload)}`;
 }
